@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="10個の質問に答えると、恋人との独占契約書ができる試作版フォームです。">
+<style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>独占契約書メーカー</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* 設計: 左に10問の質問、右に紙の契約書。プレビューの描画結果がそのまま画像/PDFになる。
+   色は藍ベースの青灰。朱色は契約書の印影にだけ使う。まじめな書式に恋人のルールが載るのが見どころ。 */
+:root{
+  --bg:#eceef4;
+  --surface:#ffffff;
+  --ink:#1a2030;
+  --muted:#586178;
+  --line:#d2d7e3;
+  --accent:#2c3c8c;
+  --accent-ink:#ffffff;
+  --shadow:0 1px 2px rgb(20 28 60 / .10),0 10px 28px rgb(20 28 60 / .10);
+  --font-ui:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --font-serif:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#11141c;--surface:#1a1f2b;--ink:#e7eaf3;--muted:#9aa3ba;--line:#2d3445;
+    --accent:#93a2f2;--accent-ink:#10142a;--shadow:0 1px 2px rgb(0 0 0 / .4),0 10px 28px rgb(0 0 0 / .45);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11141c;--surface:#1a1f2b;--ink:#e7eaf3;--muted:#9aa3ba;--line:#2d3445;
+  --accent:#93a2f2;--accent-ink:#10142a;--shadow:0 1px 2px rgb(0 0 0 / .4),0 10px 28px rgb(0 0 0 / .45);
+  color-scheme:dark;
+}
+
+body{
+  font-family:var(--font-ui);font-size:16px;line-height:1.65;
+  background:var(--bg);color:var(--ink);
+  padding-inline:16px;padding-block:28px 150px;
+}
+.wrap{max-width:1120px;margin:0 auto}
+.top{margin-bottom:20px}
+.eyebrow{margin:0 0 6px;font-size:13px;font-weight:700;letter-spacing:.12em;color:var(--accent)}
+h1{margin:0 0 10px;font-family:var(--font-serif);font-weight:700;font-size:clamp(26px,5.4vw,40px);line-height:1.25;text-wrap:balance}
+.lead{margin:0;max-width:34em;color:var(--muted)}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:32px;margin-top:8px}
+@media (min-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr) minmax(0,520px);gap:48px;align-items:start}
+  .preview{position:sticky;top:16px;max-height:calc(100vh - 150px);overflow-y:auto;padding:2px 6px 2px 2px}
+}
+
+/* 質問 */
+.q{padding-block:22px;border-top:1px solid var(--line);min-width:0}
+.q:first-child{border-top:0;padding-top:8px}
+.q-top{display:flex;align-items:center;gap:8px}
+.q-no{font-family:var(--font-serif);font-weight:700;font-size:15px;letter-spacing:.06em;color:var(--accent);font-variant-numeric:tabular-nums}
+.tag{font-size:12px;line-height:1;padding:4px 7px;border:1px solid var(--line);border-radius:4px;color:var(--muted)}
+.tag.req{border-color:var(--accent);color:var(--accent)}
+.q-label{margin:6px 0 2px;font-size:17px;font-weight:700;line-height:1.4}
+.hint{margin:0 0 12px;font-size:14px;color:var(--muted)}
+
+.field{
+  display:block;width:100%;box-sizing:border-box;font:inherit;font-size:16px;color:var(--ink);
+  background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;
+}
+.field:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+textarea.field{min-height:116px;resize:vertical;line-height:1.6}
+.date{max-width:260px}
+.pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.pair label{display:block;margin:0 0 4px;font-size:13px;font-weight:700;color:var(--muted)}
+.count{margin:6px 0 0;text-align:right;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{position:relative;display:block}
+.chip input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.chip span{display:block;padding:10px 16px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:15px;line-height:1.35}
+.chip input:checked + span{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+.chip input:focus-visible + span{outline:2px solid var(--accent);outline-offset:2px}
+.chip.multi input:checked + span::before{content:"✓ "}
+.note{margin:8px 0 0;padding-top:18px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+
+/* プレビュー */
+.preview{min-width:0}
+.pv-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px}
+.pv-head h2{margin:0;font-family:var(--font-serif);font-size:18px}
+.pv-note{font-size:13px;color:var(--muted)}
+.sheets{display:grid;gap:16px}
+.sheets canvas{display:block;width:100%;height:auto;background:#ffffff;border-radius:2px;box-shadow:var(--shadow)}
+.pv-wait{margin:0;padding:48px 16px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:8px}
+.savebox{margin-bottom:16px;padding:14px;background:var(--surface);border:1px solid var(--accent);border-radius:8px}
+.savebox-msg{margin:0 0 12px;font-size:14px}
+.savelist{display:grid;gap:14px;margin-bottom:12px}
+.saveitem{display:grid;gap:8px;justify-items:start}
+.saveitem img{display:block;width:100%;height:auto;background:#ffffff;border:1px solid var(--line)}
+
+/* 下部バー */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--surface);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px))}
+.bar-in{max-width:1120px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px}
+.bar-msg{flex:1 1 240px;min-width:0;margin:0;font-size:14px;color:var(--muted)}
+.bar-btns{display:flex;flex-wrap:wrap;gap:8px}
+.btn{display:inline-block;font:inherit;font-size:15px;font-weight:700;line-height:1.3;padding:11px 18px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);text-decoration:none;cursor:pointer}
+.btn.sub{background:transparent;color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">みんなの独占契約書を見てみよう</p>
+    <h1>独占契約書メーカー</h1>
+    <p class="lead">10個の質問に答えるだけ。あなたと恋人の独占契約書（恋人契約書）ができて、画像とPDFで保存できます。</p>
+  </header>
+
+  <div class="layout">
+    <form id="form" autocomplete="off">
+      <div class="q">
+        <div class="q-top"><span class="q-no">Q1</span><span class="tag req">必須</span></div>
+        <p class="q-label" id="l-names">契約を結ぶ二人のお名前</p>
+        <p class="hint">ニックネームでもOKです。契約書では、あなたが「甲」、恋人が「乙」になります。</p>
+        <div class="pair" role="group" aria-labelledby="l-names">
+          <div><label for="f-me">私（甲）</label><input class="field" id="f-me" type="text" maxlength="12" placeholder="例：たろう"></div>
+          <div><label for="f-partner">恋人（乙）</label><input class="field" id="f-partner" type="text" maxlength="12" placeholder="例：はなこ"></div>
+        </div>
+      </div>
+
+      <div class="q">
+        <div class="q-top"><span class="q-no">Q2</span></div>
+        <label class="q-label" for="f-date">契約日</label>
+        <p class="hint">今日の日付が入っています。交際を始めた日などに変えてもOKです。</p>
+        <input class="field date" id="f-date" type="date">
+      </div>
+
+      <div class="q">
+        <div class="q-top"><span class="q-no">Q3</span></div>
+        <p class="q-label" id="l-excl">他の人と二人きりで会うのは？</p>
+        <p class="hint">「独占」のルールです。どこまでOKかを選んでください。</p>
+        <div class="chips" role="radiogroup" aria-labelledby="l-excl">
+          <label class="chip"><input type="radio" name="excl" value="no" checked><span>二人きりはNG</span></label>
+          <label class="chip"><input type="radio" name="excl" value="report"><span>事前に報告すればOK</span></label>
+          <label class="chip"><input type="radio" name="excl" value="free"><span>友人付き合いは自由</span></label>
+        </div>
+      </div>
+
+      <div class="q">
+        <div class="q-top"><span class="q-no">Q4</span></div>
+        <p class="q-label" id="l-contact">連絡の頻度は？</p>
+        <p class="hint">毎日どのくらい連絡を取り合うかを選んでください。</p>
+        <div class="chips" role="radiogroup" aria-labelledby="l-contact">
+          <label class="chip"><input type="radio" name="contact" value="morning"><span>毎日おはようとおやすみ</span></label>
+          <label class="chip"><input type="radio" name="contact" value="daily" checked><span>1日1回は連絡</span></label>
+          <label class="chip"><input type="radio" name="contact" value="free"><span>気が向いたときでOK</span></label>
+        </div>
+      </div>
+
+      <div class="q">
+        <div class="q-top"><span class="q-no">Q5</span></div>
+        <p class="q-label" id="l-meet">会う頻度は？</p>
+        <p class="hint">会う時間をどのくらいつくるかを選んでください。</p>
+        <div class="chips" role="radiogroup" aria-labelledby="l-meet">
+          <label class="chip"><input type="radio" name="meet" value="w1"><span>週に1回以上</span></label>
+          <label class="chip"><input type="radio" name="meet" value="m2" checked><span>月に2〜3回</span></label>
+          <label class="chip"><input type="radio" name="meet" value="m1"><span>月に1回</span></label>
+          <label class="chip"><input type="radio" name="meet" value="flex"><span>予定が合うとき</span></label>
+        </div>
+      </div>
+
+      <div class="q">
+        <div class="q-top"><span class="q-no">Q6</span></div>
+        <p class="q-label" id="l-money">デート代はどうする？</p>
+        <p class="hint">お金のルールです。貸し借りは事前に相談、という一文が自動で入ります。</p>
+        <div class="chips" role="radiogroup" aria-labelledby="l-money">
+          <label class="chip"><input type="radio" name="money" value="split" checked><span>割り勘</span></label>
+          <label class="chip"><input type="radio" name="money" value="turn"><span>交代で払う</span></label>
+          <label class="chip"><input type="radio" name="money" value="more"><span>収入が多い方が多めに</span></label>
+          <label class="chip"><input type="radio" name="money" value="talk"><span>その都度相談</span></label>
+        </div>
+      </div>
+
+      <div class="q">
+        <div class="q-top"><span class="q-no">Q7</span></div>
+        <p class="q-label" id="l-sns">二人の関係をSNSや動画で公開していい？</p>
+        <p class="hint">動画やXで話題にするときの線引きです。</p>
+        <div class="chips" role="radiogroup" aria-labelledby="l-sns">
+          <label class="chip"><input type="radio" name="sns" value="public"><span>公開OK</span></label>
+          <label class="chip"><input type="radio" name="sns" value="anon" checked><span>相手がわからない形ならOK</span></label>
+          <label class="chip"><input type="radio" name="sns" value="private"><span>非公開</span></label>
+        </div>
+      </div>
+
+      <div class="q">
+        <div class="q-top"><span class="q-no">Q8</span><span class="tag">任意</span></div>
+        <p class="q-label" id="l-fight">ケンカしたときのルールは？</p>
+        <p class="hint">守りたいものをすべて選んでください。選ばなければ「冷静になってから話し合う」になります。</p>
+        <div class="chips" role="group" aria-labelledby="l-fight">
+          <label class="chip multi"><input type="checkbox" name="fight" value="same"><span>その日のうちに話し合う</span></label>
+          <label class="chip multi"><input type="checkbox" name="fight" value="noignore"><span>連絡を無視しない</span></label>
+          <label class="chip multi"><input type="checkbox" name="fight" value="nothird"><span>友人・家族を巻き込まない</span></label>
+          <label class="chip multi"><input type="checkbox" name="fight" value="nobad"><span>暴力・暴言なし</span></label>
+          <label class="chip multi"><input type="checkbox" name="fight" value="apology"><span>悪いと思ったら先に謝る</span></label>
+        </div>
+      </div>
+
+      <div class="q">
+        <div class="q-top"><span class="q-no">Q9</span></div>
+        <p class="q-label" id="l-penalty">ルールを破ったら？</p>
+        <p class="hint">違反したときの約束を選んでください。</p>
+        <div class="chips" role="radiogroup" aria-labelledby="l-penalty">
+          <label class="chip"><input type="radio" name="penalty" value="talk" checked><span>話し合って見直す</span></label>
+          <label class="chip"><input type="radio" name="penalty" value="treat"><span>ごはんをおごる</span></label>
+          <label class="chip"><input type="radio" name="penalty" value="letter"><span>反省の手紙を書く</span></label>
+          <label class="chip"><input type="radio" name="penalty" value="day"><span>1日言うことを聞く</span></label>
+        </div>
+      </div>
+
+      <div class="q">
+        <div class="q-top"><span class="q-no">Q10</span><span class="tag">任意・自由記述</span></div>
+        <label class="q-label" for="f-free">特約事項（二人だけの特別ルール）</label>
+        <p class="hint">好きに書いてください。第10条にそのまま入ります。</p>
+        <textarea class="field" id="f-free" maxlength="200" placeholder="例：記念日は必ず二人で祝う。同居するときは家事を分担する。結婚について、年に1回は話し合う。"></textarea>
+        <p class="count"><span id="cnt">0</span> / 200</p>
+      </div>
+
+      <p class="note">ネタとして楽しむための簡易的な雛形です。法的な効力や拘束力を保証するものではありません。</p>
+    </form>
+
+    <aside class="preview" aria-label="契約書プレビュー">
+      <div class="pv-head"><h2>できあがりプレビュー</h2><span class="pv-note" id="pv-pages"></span></div>
+      <div class="savebox" id="savebox" hidden>
+        <p class="savebox-msg">画像を長押し（パソコンは右クリック）して「画像を保存」を選んでください。コピーして、そのままXの投稿画面に貼り付けることもできます。</p>
+        <div class="savelist" id="savelist"></div>
+        <button class="btn sub" id="btn-closebox" type="button">閉じる</button>
+      </div>
+      <div id="sheets" class="sheets"><p class="pv-wait" id="pv-wait">契約書を準備しています…</p></div>
+    </aside>
+  </div>
+</div>
+
+<div class="bar">
+  <div class="bar-in">
+    <p class="bar-msg" id="msg" role="status" aria-live="polite">Q1の二人のお名前を入れると保存できます。</p>
+    <div class="bar-btns">
+      <button class="btn" id="btn-png" type="button" disabled>PNG画像で保存</button>
+      <button class="btn sub" id="btn-pdf" type="button" disabled>PDFで保存</button>
+      <a class="btn sub" id="btn-x" href="#" target="_blank" rel="noopener noreferrer">Xに投稿する</a>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* ---- 企画側の設定 ---- */
+  var CFG = {
+    title: '独占契約書',
+    sub: '（恋人契約書）',
+    hashtag: '#みんなの独占契約書',
+    /* 試作版の表示。本番にするときは watermark を false にする */
+    watermark: true,
+    wmText: 'SAMPLE',
+    wmSub: '試作版・サンプル',
+    footer: '試作版サンプル。ネタ用の雛形で、法的効力を保証するものではありません。'
+  };
+
+  /* ---- 紙のサイズ(A4・150dpi)と文字組み ---- */
+  var PW = 1240, PH = 1754, MX = 110, MT = 110, MB = 100, TW = PW - MX * 2;
+  var FS = 22, LH = 38;
+  var SERIF = '"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","MS PMincho",serif';
+  var INK = '#1b1b1f', SUB = '#6a6e7a', RED = '#c1281b';
+  function f(w, s) { return w + ' ' + s + 'px ' + SERIF; }
+
+  /* ---- 選択肢ごとの条文 ---- */
+  var EXCL = {
+    no: '甲と乙は、互いを唯一の交際相手とし、他の人と恋愛関係になりません。また、他の人と二人きりで会うことは行いません。',
+    report: '甲と乙は、互いを唯一の交際相手とし、他の人と恋愛関係になりません。他の人と二人きりで会うときは、事前に相手へ伝えます。',
+    free: '甲と乙は、互いを唯一の交際相手とし、他の人と恋愛関係になりません。友人としての付き合いは、互いに尊重します。'
+  };
+  var CONTACT = {
+    morning: '甲と乙は、毎日「おはよう」と「おやすみ」の連絡を取り合います。',
+    daily: '甲と乙は、1日に1回は連絡を取り合います。',
+    free: '連絡の頻度は決めず、互いに気が向いたときに連絡します。返信できない事情があるときは、一言伝えます。'
+  };
+  var MEET = { w1: '週に1回以上', m2: '月に2〜3回程度', m1: '月に1回程度', flex: '予定が合うときに' };
+  var MONEY = {
+    split: 'デート代などの費用は、原則として割り勘とします。',
+    turn: 'デート代などの費用は、交代で支払います。',
+    more: 'デート代などの費用は、収入の多い方が多めに負担します。',
+    talk: 'デート代などの費用は、その都度話し合って決めます。'
+  };
+  var SNS = {
+    public: '二人の関係は、SNSや動画で公開してよいものとします。ただし、相手が嫌がる内容は投稿しません。',
+    anon: '二人の関係は、相手を特定できない形であれば、SNSや動画で話題にしてよいものとします。',
+    private: '二人の関係は、相手の同意なく、SNSや動画で公開しません。'
+  };
+  var FIGHT = {
+    same: 'その日のうちに話し合うこと',
+    noignore: '連絡を無視しないこと',
+    nothird: '友人や家族を巻き込まないこと',
+    nobad: '暴力や人格を否定する言葉を使わないこと',
+    apology: '悪かったと思ったら先に謝ること'
+  };
+  var PENALTY = {
+    talk: '本契約に違反したときは、二人で話し合い、ルールを見直します。',
+    treat: '本契約に違反したときは、違反した方が相手にごはんをごちそうします。',
+    letter: '本契約に違反したときは、違反した方が反省の手紙を書きます。',
+    day: '本契約に違反したときは、違反した方が相手のお願いを1日聞きます。'
+  };
+  var FIXED = '契約番号甲乙令和平成年月日元0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_-/印＿（）「」、。第条〜 /';
+
+  function $(id) { return document.getElementById(id); }
+  var elMe = $('f-me'), elPartner = $('f-partner'), elDate = $('f-date'), elFree = $('f-free');
+  var sheets = $('sheets'), msgEl = $('msg'), btnPng = $('btn-png'), btnPdf = $('btn-pdf'), btnX = $('btn-x');
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function todayStr() { var t = new Date(); return t.getFullYear() + '-' + pad(t.getMonth() + 1) + '-' + pad(t.getDate()); }
+  function jp(d) {
+    var blank = '令和　　年　　月　　日';
+    if (!d) return blank;
+    var p = d.split('-').map(Number);
+    if (p.length !== 3 || p.some(isNaN)) return blank;
+    if (d >= '2019-05-01') { var n = p[0] - 2018; return '令和' + (n === 1 ? '元' : n) + '年' + p[1] + '月' + p[2] + '日'; }
+    return p[0] + '年' + p[1] + '月' + p[2] + '日';
+  }
+  var RAND = (function () {
+    var c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', s = '';
+    for (var i = 0; i < 4; i++) s += c[Math.floor(Math.random() * c.length)];
+    return s;
+  })();
+
+  /* ---- 回答の読み取り ---- */
+  function radio(n) { var e = document.querySelector('input[name="' + n + '"]:checked'); return e ? e.value : ''; }
+  function checks(n) { return Array.prototype.map.call(document.querySelectorAll('input[name="' + n + '"]:checked'), function (i) { return i.value; }); }
+  function answers() {
+    return {
+      me: elMe.value.trim(),
+      partner: elPartner.value.trim(),
+      date: elDate.value,
+      excl: radio('excl') || 'no',
+      contact: radio('contact') || 'daily',
+      meet: radio('meet') || 'm2',
+      money: radio('money') || 'split',
+      sns: radio('sns') || 'anon',
+      fight: checks('fight'),
+      penalty: radio('penalty') || 'talk',
+      free: elFree.value.trim()
+    };
+  }
+
+  /* ---- 契約書の文面 ---- */
+  function buildDoc(a) {
+    var me = a.me || '＿＿＿＿＿＿', pa = a.partner || '＿＿＿＿＿＿';
+    var pre = me + '（以下「甲」といいます。）と' + pa + '（以下「乙」といいます。）は、互いを唯一の恋人として大切にするため、次のとおり契約を締結します。';
+    var c = [];
+    c.push(['第1条（目的）', '甲と乙は、互いに思いやりと誠実さをもって向き合い、二人の関係を大切に育てるため、本契約を結びます。']);
+    c.push(['第2条（独占）', EXCL[a.excl]]);
+    c.push(['第3条（連絡）', CONTACT[a.contact]]);
+    c.push(['第4条（会う頻度）', '甲と乙は、' + MEET[a.meet] + '会う時間をつくります。']);
+    c.push(['第5条（お金）', MONEY[a.money] + 'お金の貸し借りは、必ず事前に相談します。']);
+    c.push(['第6条（SNS）', SNS[a.sns]]);
+    c.push(['第7条（ケンカのルール）', a.fight.length
+      ? 'ケンカをしたときは、次のことを守ります。' + a.fight.map(function (k) { return FIGHT[k]; }).join('、') + '。'
+      : 'ケンカをしたときは、冷静になってから話し合います。']);
+    c.push(['第8条（違反したとき）', PENALTY[a.penalty]]);
+    c.push(['第9条（見直しと解除）', '本契約は、締結日から効力を生じます。甲と乙は、毎年の記念日に内容を見直します。いずれかが解除を申し出たときは、話し合いのうえ終了できます。']);
+    c.push(['第10条（特約事項）', a.free ? a.free.replace(/\r\n?/g, '\n') : '特にありません。']);
+    var closing = '本契約の成立を証するため、本書の電子データを作成し、甲乙各自がこれを保管します。';
+    var all = FIXED + CFG.title + CFG.sub + CFG.wmText + CFG.wmSub + CFG.footer + pre + closing + jp(a.date) +
+      c.map(function (x) { return x[0] + x[1]; }).join('') + a.me + a.partner;
+    return { pre: pre, clauses: c, closing: closing, no: 'LV-' + (a.date || todayStr()).replace(/-/g, '') + '-' + RAND, all: all };
+  }
+
+  /* ---- 文字組み(禁則処理つきの折り返し) ---- */
+  var NO_START = new Set('、。，．）」』】〕〉》！？ゝゞー々ぁぃぅぇぉっゃゅょァィゥェォッャュョ・：；)］｝,.!?'.split(''));
+  var NO_END = new Set('（「『【〔〈《([［｛'.split(''));
+  function wrap(ctx, text, w1, w2) {
+    var lines = [], cur = '', cw = 0, limit = w1;
+    var chars = Array.from(text);
+    for (var i = 0; i < chars.length; i++) {
+      var ch = chars[i], w = ctx.measureText(ch).width;
+      if (cw + w > limit && cur) {
+        if (NO_START.has(ch)) { cur += ch; cw += w; continue; }
+        var carry = '', last = cur.slice(-1);
+        if (NO_END.has(last)) { carry = last; cur = cur.slice(0, -1); }
+        lines.push(cur);
+        limit = w2;
+        cur = carry + ch;
+        cw = ctx.measureText(cur).width;
+      } else { cur += ch; cw += w; }
+    }
+    if (cur) lines.push(cur);
+    return lines.length ? lines : [''];
+  }
+
+  function sealOf(s) {
+    var c = Array.from((s || '').replace(/[\s　＿_]/g, ''));
+    return c.length >= 2 ? c.slice(0, 2).join('') : c.join('');
+  }
+
+  function layout(ctx, a, d) {
+    var pages = [[]], y = MT;
+    function push(op) { pages[pages.length - 1].push(op); }
+    function need(h) { if (y + h > PH - MB) { pages.push([]); y = MT; } }
+
+    push({ k: 't', s: '契約番号 ' + d.no, x: PW - MX, y: 62, font: f(400, 17), color: SUB, align: 'right' });
+    push({ k: 'title', s: CFG.title, y: MT + 30 });
+    push({ k: 't', s: CFG.sub, x: PW / 2, y: MT + 80, font: f(400, 22), color: SUB, align: 'center' });
+    push({ k: 'rule', y: MT + 110 });
+    y = MT + 150;
+
+    ctx.font = f(400, FS);
+    wrap(ctx, d.pre, TW - FS, TW).forEach(function (ln, i) {
+      need(LH);
+      push({ k: 't', s: ln, x: MX + (i === 0 ? FS : 0), y: y + LH / 2, font: f(400, FS) });
+      y += LH;
+    });
+    y += 18;
+
+    d.clauses.forEach(function (cl) {
+      var h = cl[0];
+      ctx.font = f(700, FS);
+      var hw = ctx.measureText(h).width + 16;
+      ctx.font = f(400, FS);
+      need(LH * 2);
+      var first = true;
+      cl[1].split('\n').forEach(function (para) {
+        var lines = first ? wrap(ctx, para, TW - hw, TW) : wrap(ctx, para, TW, TW);
+        lines.forEach(function (ln, i) {
+          need(LH);
+          if (first && i === 0) {
+            push({ k: 't', s: h, x: MX, y: y + LH / 2, font: f(700, FS) });
+            push({ k: 't', s: ln, x: MX + hw, y: y + LH / 2, font: f(400, FS) });
+          } else {
+            push({ k: 't', s: ln, x: MX, y: y + LH / 2, font: f(400, FS) });
+          }
+          y += LH;
+        });
+        first = false;
+      });
+      y += 12;
+    });
+
+    y += 8;
+    ctx.font = f(400, FS);
+    wrap(ctx, d.closing, TW - FS, TW).forEach(function (ln, i) {
+      need(LH);
+      push({ k: 't', s: ln, x: MX + (i === 0 ? FS : 0), y: y + LH / 2, font: f(400, FS) });
+      y += LH;
+    });
+
+    y += 22;
+    need(LH + 24 + 96 * 2);
+    push({ k: 't', s: jp(a.date), x: MX, y: y + LH / 2, font: f(400, 24) });
+    y += LH + 24;
+
+    function row(label, name) {
+      push({ k: 't', s: label, x: MX, y: y + 34, font: f(700, 26) });
+      push({ k: 't', s: name, x: MX + 66, y: y + 34, font: f(400, 26) });
+      push({ k: 'line', x1: MX + 54, x2: MX + TW - 140, y: y + 62 });
+      push({ k: 'seal', cx: MX + TW - 58, cy: y + 36, r: 36, s: sealOf(name) });
+      y += 96;
+    }
+    row('甲', a.me);
+    row('乙', a.partner);
+
+    pages.forEach(function (ops, i) {
+      ops.push({ k: 't', s: CFG.footer, x: MX, y: PH - 58, font: f(400, 16), color: SUB });
+      if (pages.length > 1) ops.push({ k: 't', s: (i + 1) + ' / ' + pages.length, x: PW - MX, y: PH - 58, font: f(400, 16), color: SUB, align: 'right' });
+      if (CFG.watermark) ops.push({ k: 'wm' });
+    });
+    return pages;
+  }
+
+  /* ---- 描画 ---- */
+  function drawSeal(ctx, op) {
+    ctx.save();
+    ctx.translate(op.cx, op.cy);
+    ctx.rotate(-0.08);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    var chars = Array.from(op.s || '');
+    if (!chars.length) {
+      ctx.strokeStyle = '#c4c7d0'; ctx.fillStyle = '#c4c7d0'; ctx.lineWidth = 3;
+      ctx.setLineDash([7, 7]);
+      ctx.beginPath(); ctx.arc(0, 0, op.r, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = f(400, 26); ctx.fillText('印', 0, 2);
+    } else {
+      ctx.strokeStyle = RED; ctx.fillStyle = RED; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(0, 0, op.r, 0, Math.PI * 2); ctx.stroke();
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(0, 0, op.r - 7, 0, Math.PI * 2); ctx.stroke();
+      if (chars.length === 1) { ctx.font = f(700, 36); ctx.fillText(chars[0], 0, 2); }
+      else { ctx.font = f(700, 23); ctx.fillText(chars[0], 0, -12); ctx.fillText(chars[1], 0, 12); }
+    }
+    ctx.restore();
+  }
+
+  function drawWm(ctx) {
+    ctx.save();
+    ctx.translate(PW / 2, PH / 2);
+    ctx.rotate(-Math.PI / 6);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'rgba(60,70,120,0.14)';
+    ctx.font = f(700, 190); ctx.fillText(CFG.wmText, 0, -40);
+    ctx.font = f(700, 64); ctx.fillText(CFG.wmSub, 0, 90);
+    ctx.restore();
+  }
+
+  function drawPage(canvas, ops) {
+    canvas.width = PW; canvas.height = PH;
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, PW, PH);
+    ops.forEach(function (op) {
+      if (op.k === 't') {
+        ctx.font = op.font; ctx.fillStyle = op.color || INK;
+        ctx.textAlign = op.align || 'left'; ctx.textBaseline = 'middle';
+        ctx.fillText(op.s, op.x, op.y);
+      } else if (op.k === 'title') {
+        var sp = 24, chars = Array.from(op.s);
+        ctx.font = f(700, 50); ctx.fillStyle = INK; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        var total = chars.reduce(function (s, c) { return s + ctx.measureText(c).width; }, 0) + sp * (chars.length - 1);
+        var x = PW / 2 - total / 2;
+        chars.forEach(function (c) { ctx.fillText(c, x, op.y); x += ctx.measureText(c).width + sp; });
+      } else if (op.k === 'rule') {
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(MX, op.y); ctx.lineTo(MX + TW, op.y); ctx.stroke();
+        ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(MX, op.y + 8); ctx.lineTo(MX + TW, op.y + 8); ctx.stroke();
+      } else if (op.k === 'line') {
+        ctx.strokeStyle = '#555a66'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(op.x1, op.y); ctx.lineTo(op.x2, op.y); ctx.stroke();
+      } else if (op.k === 'seal') {
+        drawSeal(ctx, op);
+      } else if (op.k === 'wm') {
+        drawWm(ctx);
+      }
+    });
+  }
+
+  var canvases = [], seq = 0, timer = 0;
+  function withTimeout(p, ms) { return Promise.race([p, new Promise(function (r) { setTimeout(r, ms); })]); }
+
+  async function render() {
+    var my = ++seq;
+    var a = answers(), d = buildDoc(a);
+    if (document.fonts && document.fonts.load) {
+      try {
+        await withTimeout(Promise.all([document.fonts.load(f(400, FS), d.all), document.fonts.load(f(700, FS), d.all)]), 4000);
+      } catch (e) { /* 代替フォントで描画する */ }
+    }
+    if (my !== seq) return;
+    var pages = layout(document.createElement('canvas').getContext('2d'), a, d);
+    var wait = $('pv-wait'); if (wait) wait.remove();
+    while (canvases.length < pages.length) {
+      var c = document.createElement('canvas'); c.setAttribute('role', 'img');
+      sheets.appendChild(c); canvases.push(c);
+    }
+    while (canvases.length > pages.length) canvases.pop().remove();
+    pages.forEach(function (ops, i) {
+      canvases[i].setAttribute('aria-label', '契約書 ' + (i + 1) + 'ページ目');
+      drawPage(canvases[i], ops);
+    });
+    $('pv-pages').textContent = pages.length + 'ページ' + (CFG.watermark ? '・試作版' : '');
+  }
+  function schedule() { clearTimeout(timer); timer = setTimeout(function () { render(); }, 140); }
+
+  /* ---- 保存 ---- */
+  var dl;           // undefined: 確認中 / null: このビューでは使えない
+  var busy = false, status = '';
+  var J = window.jspdf && window.jspdf.jsPDF;
+
+  function namesOk() { var a = answers(); return !!(a.me && a.partner); }
+  function updateBar() {
+    var ok = namesOk();
+    var fallback = dl === null;
+    btnPng.disabled = !(ok && !busy);
+    btnPng.textContent = fallback ? '保存用の画像を表示' : 'PNG画像で保存';
+    btnPdf.hidden = fallback;
+    btnPdf.disabled = !(ok && dl && J && !busy);
+    if (status) msgEl.textContent = status;
+    else if (!ok) msgEl.textContent = 'Q1の二人のお名前を入れると保存できます。';
+    else if (fallback) msgEl.textContent = 'この画面では直接保存できません。「保存用の画像を表示」から、長押し（右クリック）で保存してください。';
+    else msgEl.textContent = 'できあがり。保存して、Xに投稿してみましょう。';
+  }
+  function say(s) { status = s; updateBar(); }
+
+  function fileBase() {
+    var a = answers();
+    function s(v) { return v.replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 10); }
+    return '独占契約書_' + (s(a.me) || 'me') + '_' + (s(a.partner) || 'partner');
+  }
+  function toBlob(c) { return new Promise(function (res) { c.toBlob(res, 'image/png'); }); }
+  async function fresh() { clearTimeout(timer); await render(); return canvases.slice(); }
+  function errText(e) {
+    var code = e && e.code;
+    if (code === 'declined') return '保存をキャンセルしました。';
+    if (code === 'rate_limited') return '少し待ってから、もう一度押してください。';
+    return '保存できませんでした。プレビューの画像を長押し（右クリック）して保存してください。';
+  }
+
+  async function copyImage(c) {
+    try {
+      var blob = await toBlob(c);
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      say('画像をコピーしました。Xの投稿画面に貼り付けできます。');
+    } catch (e) {
+      say('コピーできませんでした。画像を長押し（右クリック）して保存してください。');
+    }
+  }
+  async function showSaveBox() {
+    busy = true; status = ''; updateBar();
+    try {
+      var cs = await fresh();
+      var list = $('savelist');
+      list.textContent = '';
+      cs.forEach(function (c, i) {
+        var item = document.createElement('div'); item.className = 'saveitem';
+        var img = document.createElement('img');
+        img.alt = '契約書 ' + (i + 1) + 'ページ目（保存用）';
+        img.src = c.toDataURL('image/png');
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'btn sub';
+        b.textContent = cs.length > 1 ? (i + 1) + 'ページ目の画像をコピー' : '画像をコピー';
+        b.addEventListener('click', function () { copyImage(c); });
+        item.appendChild(img); item.appendChild(b); list.appendChild(item);
+      });
+      var box = $('savebox');
+      box.hidden = false;
+      box.scrollIntoView({ block: 'start' });
+    } finally { busy = false; updateBar(); }
+  }
+
+  async function savePng() {
+    if (busy) return;
+    if (!dl) { await showSaveBox(); return; }
+    busy = true; status = ''; updateBar();
+    try {
+      var cs = await fresh(), base = fileBase();
+      for (var i = 0; i < cs.length; i++) {
+        var blob = await toBlob(cs[i]);
+        await dl.save({ filename: cs.length > 1 ? base + '_' + (i + 1) + 'of' + cs.length + '.png' : base + '.png', data: blob });
+      }
+      busy = false; say('PNG画像を保存しました。');
+    } catch (e) { busy = false; say(errText(e)); }
+  }
+  async function savePdf() {
+    if (!dl || !J || busy) return;
+    busy = true; status = ''; updateBar();
+    try {
+      var cs = await fresh();
+      var pdf = new J({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
+      pdf.setProperties({ title: CFG.title });
+      cs.forEach(function (c, i) {
+        if (i) pdf.addPage();
+        pdf.addImage(c.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+      });
+      await dl.save({ filename: fileBase() + '.pdf', data: pdf.output('blob') });
+      busy = false; say('PDFを保存しました。');
+    } catch (e) { busy = false; say(errText(e)); }
+  }
+  btnPng.addEventListener('click', savePng);
+  btnPdf.addEventListener('click', savePdf);
+  $('btn-closebox').addEventListener('click', function () { $('savebox').hidden = true; });
+  btnX.href = 'https://x.com/intent/post?text=' + encodeURIComponent('独占契約書ができました！ ' + CFG.hashtag);
+
+  /* ---- 入力まわり ---- */
+  elDate.value = todayStr();
+  elFree.addEventListener('input', function () { $('cnt').textContent = String(Array.from(elFree.value).length); });
+  var form = $('form');
+  form.addEventListener('submit', function (e) { e.preventDefault(); });
+  function onEdit() { status = ''; $('savebox').hidden = true; updateBar(); schedule(); }
+  form.addEventListener('input', onEdit);
+  form.addEventListener('change', onEdit);
+
+  (async function () {
+    try { dl = window.claude && window.claude.use ? await window.claude.use('downloads') : {
+      save: async function (req) {
+        var blob = req.data instanceof Blob ? req.data : new Blob([req.data]);
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = req.filename;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+        return { status: 'saved' };
+      }
+    }; }
+    catch (e) { dl = null; }
+    updateBar();
+  })();
+
+  updateBar();
+  render();
+})();
+</script>
+
+</body>
+</html>
