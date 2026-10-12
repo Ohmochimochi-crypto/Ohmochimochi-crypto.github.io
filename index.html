@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="10個の質問に答えると、恋人との独占契約書ができる試作版フォームです。">
+<meta name="description" content="12個の質問に答えると、パートナーとの独占契約書ができる試作版フォームです。">
 <style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>独占契約書メーカー</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
 <style>
-/* 設計: 左に10問の質問、右に紙の契約書。プレビューの描画結果がそのまま画像/PDFになる。
+/* 設計: 左に11問の質問、右に紙の契約書。プレビューの描画結果がそのまま画像/PDFになる。
    色は藍ベースの青灰。朱色は契約書の印影にだけ使う。まじめな書式に恋人のルールが載るのが見どころ。 */
 :root{
   --bg:#eceef4;
@@ -80,6 +80,14 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
 .chip input:checked + span{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
 .chip input:focus-visible + span{outline:2px solid var(--accent);outline-offset:2px}
 .chip.multi input:checked + span::before{content:"✓ "}
+.exc{margin-top:12px}
+.exc summary{display:inline-block;cursor:pointer;font-size:14px;font-weight:700;color:var(--accent);padding:4px 0}
+.exc summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.exc-body{display:grid;gap:10px;margin-top:8px;max-width:360px}
+.exc-ex{display:flex;flex-wrap:wrap;gap:6px}
+.chip-btn{font:inherit;font-size:13px;line-height:1.3;padding:6px 10px;border:1px dashed var(--line);border-radius:6px;background:transparent;color:var(--muted);cursor:pointer}
+.chip-btn:hover{border-color:var(--accent);color:var(--accent)}
+.chip-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .note{margin:8px 0 0;padding-top:18px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
 
 /* プレビュー */
@@ -106,48 +114,40 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 </style>
-</head>
-<body>
 
 <div class="wrap">
   <header class="top">
     <p class="eyebrow">みんなの独占契約書を見てみよう</p>
     <h1>独占契約書メーカー</h1>
-    <p class="lead">10個の質問に答えるだけ。あなたと恋人の独占契約書（恋人契約書）ができて、画像とPDFで保存できます。</p>
+    <p class="lead">11個の質問に答えるだけ。あなたとパートナーの独占契約書（恋人契約書）ができて、画像とPDFで保存できます。選んだ内容は、契約書の中で太字・青字・下線で強調されます。</p>
   </header>
 
   <div class="layout">
     <form id="form" autocomplete="off">
       <div class="q">
         <div class="q-top"><span class="q-no">Q1</span><span class="tag req">必須</span></div>
-        <p class="q-label" id="l-names">契約を結ぶ二人のお名前</p>
-        <p class="hint">ニックネームでもOKです。契約書では、あなたが「甲」、恋人が「乙」になります。</p>
-        <div class="pair" role="group" aria-labelledby="l-names">
-          <div><label for="f-me">私（甲）</label><input class="field" id="f-me" type="text" maxlength="12" placeholder="例：たろう"></div>
-          <div><label for="f-partner">恋人（乙）</label><input class="field" id="f-partner" type="text" maxlength="12" placeholder="例：はなこ"></div>
-        </div>
+        <label class="q-label" for="f-me">あなたのニックネーム</label>
+        <p class="hint">契約書では、あなたが「甲」、恋人（パートナー）が「乙」になります。</p>
+        <input class="field" id="f-me" type="text" maxlength="12" placeholder="例：たろう">
       </div>
-
       <div class="q">
         <div class="q-top"><span class="q-no">Q2</span></div>
-        <label class="q-label" for="f-date">契約日</label>
-        <p class="hint">今日の日付が入っています。交際を始めた日などに変えてもOKです。</p>
-        <input class="field date" id="f-date" type="date">
-      </div>
-
-      <div class="q">
-        <div class="q-top"><span class="q-no">Q3</span></div>
-        <p class="q-label" id="l-excl">他の人と二人きりで会うのは？</p>
+        <p class="q-label" id="l-excl">他の人と二人きりで過ごすのは？</p>
         <p class="hint">「独占」のルールです。どこまでOKかを選んでください。</p>
         <div class="chips" role="radiogroup" aria-labelledby="l-excl">
           <label class="chip"><input type="radio" name="excl" value="no" checked><span>二人きりはNG</span></label>
-          <label class="chip"><input type="radio" name="excl" value="report"><span>事前に報告すればOK</span></label>
+          <label class="chip"><input type="radio" name="excl" value="report"><span>事前に伝えればOK</span></label>
           <label class="chip"><input type="radio" name="excl" value="free"><span>友人付き合いは自由</span></label>
         </div>
+        <details class="exc"><summary>＋ 例外を足す（10文字まで）</summary>
+          <div class="exc-body">
+            <input class="field" id="x-excl" type="text" maxlength="10" aria-label="例外（10文字まで）" placeholder="例：仕事の会食">
+            <div class="exc-ex"><button type="button" class="chip-btn" data-for="x-excl">仕事の会食</button><button type="button" class="chip-btn" data-for="x-excl">家族</button><button type="button" class="chip-btn" data-for="x-excl">同性の友人</button></div>
+          </div>
+        </details>
       </div>
-
       <div class="q">
-        <div class="q-top"><span class="q-no">Q4</span></div>
+        <div class="q-top"><span class="q-no">Q3</span></div>
         <p class="q-label" id="l-contact">連絡の頻度は？</p>
         <p class="hint">毎日どのくらい連絡を取り合うかを選んでください。</p>
         <div class="chips" role="radiogroup" aria-labelledby="l-contact">
@@ -155,22 +155,60 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
           <label class="chip"><input type="radio" name="contact" value="daily" checked><span>1日1回は連絡</span></label>
           <label class="chip"><input type="radio" name="contact" value="free"><span>気が向いたときでOK</span></label>
         </div>
+        <details class="exc"><summary>＋ 例外を足す（10文字まで）</summary>
+          <div class="exc-body">
+            <input class="field" id="x-contact" type="text" maxlength="10" aria-label="例外（10文字まで）" placeholder="例：残業の日">
+            <div class="exc-ex"><button type="button" class="chip-btn" data-for="x-contact">残業の日</button><button type="button" class="chip-btn" data-for="x-contact">旅行中</button><button type="button" class="chip-btn" data-for="x-contact">仕事が忙しい日</button></div>
+          </div>
+        </details>
       </div>
-
+      <div class="q">
+        <div class="q-top"><span class="q-no">Q4</span></div>
+        <p class="q-label" id="l-phone">相手のスマホは見てもいい？</p>
+        <p class="hint">プライバシーの線引きです。</p>
+        <div class="chips" role="radiogroup" aria-labelledby="l-phone">
+          <label class="chip"><input type="radio" name="phone" value="nolook" checked><span>見ない（信頼する）</span></label>
+          <label class="chip"><input type="radio" name="phone" value="consent"><span>同意があるときだけ</span></label>
+          <label class="chip"><input type="radio" name="phone" value="open"><span>お互いオープンにする</span></label>
+        </div>
+        <details class="exc"><summary>＋ 例外を足す（10文字まで）</summary>
+          <div class="exc-body">
+            <input class="field" id="x-phone" type="text" maxlength="10" aria-label="例外（10文字まで）" placeholder="例：緊急のとき">
+            <div class="exc-ex"><button type="button" class="chip-btn" data-for="x-phone">緊急のとき</button><button type="button" class="chip-btn" data-for="x-phone">体調不良のとき</button><button type="button" class="chip-btn" data-for="x-phone">紛失したとき</button></div>
+          </div>
+        </details>
+      </div>
       <div class="q">
         <div class="q-top"><span class="q-no">Q5</span></div>
-        <p class="q-label" id="l-meet">会う頻度は？</p>
-        <p class="hint">会う時間をどのくらいつくるかを選んでください。</p>
-        <div class="chips" role="radiogroup" aria-labelledby="l-meet">
-          <label class="chip"><input type="radio" name="meet" value="w1"><span>週に1回以上</span></label>
-          <label class="chip"><input type="radio" name="meet" value="m2" checked><span>月に2〜3回</span></label>
-          <label class="chip"><input type="radio" name="meet" value="m1"><span>月に1回</span></label>
-          <label class="chip"><input type="radio" name="meet" value="flex"><span>予定が合うとき</span></label>
+        <p class="q-label" id="l-sns">SNSでの他の人との交流は？</p>
+        <p class="hint">いいね、リプライ、DMなどの使い方のルールです。</p>
+        <div class="chips" role="radiogroup" aria-labelledby="l-sns">
+          <label class="chip"><input type="radio" name="sns" value="free" checked><span>今までどおり自由</span></label>
+          <label class="chip"><input type="radio" name="sns" value="dm"><span>DMは隠さない</span></label>
+          <label class="chip"><input type="radio" name="sns" value="min"><span>交流は控えめに</span></label>
         </div>
+        <details class="exc"><summary>＋ 例外を足す（10文字まで）</summary>
+          <div class="exc-body">
+            <input class="field" id="x-sns" type="text" maxlength="10" aria-label="例外（10文字まで）" placeholder="例：趣味の交流">
+            <div class="exc-ex"><button type="button" class="chip-btn" data-for="x-sns">趣味の交流</button><button type="button" class="chip-btn" data-for="x-sns">仕事の連絡</button><button type="button" class="chip-btn" data-for="x-sns">推し活</button></div>
+          </div>
+        </details>
       </div>
-
       <div class="q">
         <div class="q-top"><span class="q-no">Q6</span></div>
+        <p class="q-label" id="l-coat">パートナーが、他の人に貸していいものは？</p>
+        <p class="hint">上着や身に着けるものの、貸し出しの範囲です。貸さずに買って渡す、という道もあります。</p>
+        <div class="chips" role="radiogroup" aria-labelledby="l-coat">
+          <label class="chip"><input type="radio" name="coat" value="none"><span>貸さない</span></label>
+          <label class="chip"><input type="radio" name="coat" value="small" checked><span>小物まで（マフラー・ストールなど）</span></label>
+          <label class="chip"><input type="radio" name="coat" value="buy"><span>貸さずに新品を買って渡す</span></label>
+          <label class="chip"><input type="radio" name="coat" value="ok"><span>上着もOK</span></label>
+        </div>
+        <p class="hint" style="margin:14px 0 6px">ただし書き（任意）。条件があれば一言どうぞ。</p>
+        <input class="field" id="f-coat" type="text" maxlength="40" aria-label="上着についてのただし書き" placeholder="例：雨の日だけ。洗濯してから返してもらう。">
+      </div>
+      <div class="q">
+        <div class="q-top"><span class="q-no">Q7</span></div>
         <p class="q-label" id="l-money">デート代はどうする？</p>
         <p class="hint">お金のルールです。貸し借りは事前に相談、という一文が自動で入ります。</p>
         <div class="chips" role="radiogroup" aria-labelledby="l-money">
@@ -179,24 +217,35 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
           <label class="chip"><input type="radio" name="money" value="more"><span>収入が多い方が多めに</span></label>
           <label class="chip"><input type="radio" name="money" value="talk"><span>その都度相談</span></label>
         </div>
+        <details class="exc"><summary>＋ 例外を足す（10文字まで）</summary>
+          <div class="exc-body">
+            <input class="field" id="x-money" type="text" maxlength="10" aria-label="例外（10文字まで）" placeholder="例：誕生日">
+            <div class="exc-ex"><button type="button" class="chip-btn" data-for="x-money">誕生日</button><button type="button" class="chip-btn" data-for="x-money">記念日</button><button type="button" class="chip-btn" data-for="x-money">旅行</button></div>
+          </div>
+        </details>
       </div>
-
       <div class="q">
-        <div class="q-top"><span class="q-no">Q7</span></div>
-        <p class="q-label" id="l-sns">二人の関係をSNSや動画で公開していい？</p>
-        <p class="hint">動画やXで話題にするときの線引きです。</p>
-        <div class="chips" role="radiogroup" aria-labelledby="l-sns">
-          <label class="chip"><input type="radio" name="sns" value="public"><span>公開OK</span></label>
-          <label class="chip"><input type="radio" name="sns" value="anon" checked><span>相手がわからない形ならOK</span></label>
-          <label class="chip"><input type="radio" name="sns" value="private"><span>非公開</span></label>
+        <div class="q-top"><span class="q-no">Q8</span></div>
+        <p class="q-label" id="l-ex">過去の恋人との関わりは？</p>
+        <p class="hint">連絡や付き合い方の線引きです。</p>
+        <div class="chips" role="radiogroup" aria-labelledby="l-ex">
+          <label class="chip"><input type="radio" name="ex" value="none"><span>連絡を取らない</span></label>
+          <label class="chip"><input type="radio" name="ex" value="tell" checked><span>事前に伝えればOK</span></label>
+          <label class="chip"><input type="radio" name="ex" value="normal"><span>友人として自然に</span></label>
         </div>
+        <details class="exc"><summary>＋ 例外を足す（10文字まで）</summary>
+          <div class="exc-body">
+            <input class="field" id="x-ex" type="text" maxlength="10" aria-label="例外（10文字まで）" placeholder="例：仕事上の連絡">
+            <div class="exc-ex"><button type="button" class="chip-btn" data-for="x-ex">仕事上の連絡</button><button type="button" class="chip-btn" data-for="x-ex">共通の友人</button><button type="button" class="chip-btn" data-for="x-ex">冠婚葬祭</button></div>
+          </div>
+        </details>
       </div>
-
       <div class="q">
-        <div class="q-top"><span class="q-no">Q8</span><span class="tag">任意</span></div>
-        <p class="q-label" id="l-fight">ケンカしたときのルールは？</p>
+        <div class="q-top"><span class="q-no">Q9</span><span class="tag">任意</span></div>
+        <p class="q-label" id="l-fight">不安やケンカのときのルールは？</p>
         <p class="hint">守りたいものをすべて選んでください。選ばなければ「冷静になってから話し合う」になります。</p>
         <div class="chips" role="group" aria-labelledby="l-fight">
+          <label class="chip multi"><input type="checkbox" name="fight" value="words"><span>不安や嫉妬は言葉にして伝える</span></label>
           <label class="chip multi"><input type="checkbox" name="fight" value="same"><span>その日のうちに話し合う</span></label>
           <label class="chip multi"><input type="checkbox" name="fight" value="noignore"><span>連絡を無視しない</span></label>
           <label class="chip multi"><input type="checkbox" name="fight" value="nothird"><span>友人・家族を巻き込まない</span></label>
@@ -204,24 +253,27 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
           <label class="chip multi"><input type="checkbox" name="fight" value="apology"><span>悪いと思ったら先に謝る</span></label>
         </div>
       </div>
-
       <div class="q">
-        <div class="q-top"><span class="q-no">Q9</span></div>
-        <p class="q-label" id="l-penalty">ルールを破ったら？</p>
-        <p class="hint">違反したときの約束を選んでください。</p>
-        <div class="chips" role="radiogroup" aria-labelledby="l-penalty">
-          <label class="chip"><input type="radio" name="penalty" value="talk" checked><span>話し合って見直す</span></label>
-          <label class="chip"><input type="radio" name="penalty" value="treat"><span>ごはんをおごる</span></label>
-          <label class="chip"><input type="radio" name="penalty" value="letter"><span>反省の手紙を書く</span></label>
-          <label class="chip"><input type="radio" name="penalty" value="day"><span>1日言うことを聞く</span></label>
+        <div class="q-top"><span class="q-no">Q10</span></div>
+        <p class="q-label" id="l-future">将来の話（同居や結婚など）は？</p>
+        <p class="hint">どのくらい話し合うかを選んでください。</p>
+        <div class="chips" role="radiogroup" aria-labelledby="l-future">
+          <label class="chip"><input type="radio" name="future" value="yearly"><span>年に1回は話し合う</span></label>
+          <label class="chip"><input type="radio" name="future" value="step" checked><span>節目のたびに話し合う</span></label>
+          <label class="chip"><input type="radio" name="future" value="natural"><span>自然な流れに任せる</span></label>
         </div>
+        <details class="exc"><summary>＋ 例外を足す（10文字まで）</summary>
+          <div class="exc-body">
+            <input class="field" id="x-future" type="text" maxlength="10" aria-label="例外（10文字まで）" placeholder="例：転職のとき">
+            <div class="exc-ex"><button type="button" class="chip-btn" data-for="x-future">転職のとき</button><button type="button" class="chip-btn" data-for="x-future">引っ越しのとき</button><button type="button" class="chip-btn" data-for="x-future">親に会うとき</button></div>
+          </div>
+        </details>
       </div>
-
       <div class="q">
-        <div class="q-top"><span class="q-no">Q10</span><span class="tag">任意・自由記述</span></div>
-        <label class="q-label" for="f-free">特約事項（二人だけの特別ルール）</label>
-        <p class="hint">好きに書いてください。第10条にそのまま入ります。</p>
-        <textarea class="field" id="f-free" maxlength="200" placeholder="例：記念日は必ず二人で祝う。同居するときは家事を分担する。結婚について、年に1回は話し合う。"></textarea>
+        <div class="q-top"><span class="q-no">Q11</span><span class="tag">任意・自由記述</span></div>
+        <label class="q-label" for="f-out">これをしたら即お別れ！ 絶対NG事項</label>
+        <p class="hint">あなたの「ここだけは譲れない」を、自由に書いてください。第11条にそのまま入ります。</p>
+        <textarea class="field" id="f-out" maxlength="200" placeholder="例：嘘を重ねる。約束を3回続けて破る。"></textarea>
         <p class="count"><span id="cnt">0</span> / 200</p>
       </div>
 
@@ -242,7 +294,7 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
 
 <div class="bar">
   <div class="bar-in">
-    <p class="bar-msg" id="msg" role="status" aria-live="polite">Q1の二人のお名前を入れると保存できます。</p>
+    <p class="bar-msg" id="msg" role="status" aria-live="polite">Q1のニックネームを入れると保存できます。</p>
     <div class="bar-btns">
       <button class="btn" id="btn-png" type="button" disabled>PNG画像で保存</button>
       <button class="btn sub" id="btn-pdf" type="button" disabled>PDFで保存</button>
@@ -258,9 +310,12 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
 
   /* ---- 企画側の設定 ---- */
   var CFG = {
-    title: '独占契約書',
-    sub: '（恋人契約書）',
-    hashtag: '#みんなの独占契約書',
+    title: '恋人独占契約書',
+    sub: '（恋人どうしの約束）',
+    hashtag: '', /* 投稿文に付けるタグ。今は空（タグなし）。付けるときは '#タグ名' を入れる */
+    /* 乙の表記は固定。契約日は企画日が決まったら 'YYYY-MM-DD' を入れる（空欄なら「令和　年　月　日」） */
+    partner: 'パートナー',
+    date: '',
     /* 試作版の表示。本番にするときは watermark を false にする */
     watermark: true,
     wmText: 'SAMPLE',
@@ -270,51 +325,67 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
 
   /* ---- 紙のサイズ(A4・150dpi)と文字組み ---- */
   var PW = 1240, PH = 1754, MX = 110, MT = 110, MB = 100, TW = PW - MX * 2;
-  var FS = 22, LH = 38;
+  var FS = 22, LH = 38, HS = 24, PG = 40, CG = 26, HL = '#22308a';  /* 回答が反映された箇所は、太字・少し大きく・青で強調 */
   var SERIF = '"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","MS PMincho",serif';
   var INK = '#1b1b1f', SUB = '#6a6e7a', RED = '#c1281b';
   function f(w, s) { return w + ' ' + s + 'px ' + SERIF; }
 
-  /* ---- 選択肢ごとの条文 ---- */
+  /* ---- 選択肢ごとの条文（【】で囲んだ部分が、回答として強調される） ---- */
   var EXCL = {
-    no: '甲と乙は、互いを唯一の交際相手とし、他の人と恋愛関係になりません。また、他の人と二人きりで会うことは行いません。',
-    report: '甲と乙は、互いを唯一の交際相手とし、他の人と恋愛関係になりません。他の人と二人きりで会うときは、事前に相手へ伝えます。',
-    free: '甲と乙は、互いを唯一の交際相手とし、他の人と恋愛関係になりません。友人としての付き合いは、互いに尊重します。'
+    no: '甲と乙は、互いを唯一の交際相手とし、他の人と恋愛関係になりません。また、他の人と【二人きりで過ごすことは行いません】。',
+    report: '甲と乙は、互いを唯一の交際相手とし、他の人と恋愛関係になりません。他の人と二人きりで過ごすときは、【事前に相手へ伝えます】。',
+    free: '甲と乙は、互いを唯一の交際相手とし、他の人と恋愛関係になりません。友人としての付き合いは、【互いに尊重します】。'
   };
   var CONTACT = {
-    morning: '甲と乙は、毎日「おはよう」と「おやすみ」の連絡を取り合います。',
-    daily: '甲と乙は、1日に1回は連絡を取り合います。',
-    free: '連絡の頻度は決めず、互いに気が向いたときに連絡します。返信できない事情があるときは、一言伝えます。'
+    morning: '甲と乙は、【毎日「おはよう」と「おやすみ」の連絡】を取り合います。',
+    daily: '甲と乙は、【1日に1回】は連絡を取り合います。',
+    free: '連絡の頻度は決めず、互いに【気が向いたときに連絡】します。返信できない事情があるときは、一言伝えます。'
   };
-  var MEET = { w1: '週に1回以上', m2: '月に2〜3回程度', m1: '月に1回程度', flex: '予定が合うときに' };
-  var MONEY = {
-    split: 'デート代などの費用は、原則として割り勘とします。',
-    turn: 'デート代などの費用は、交代で支払います。',
-    more: 'デート代などの費用は、収入の多い方が多めに負担します。',
-    talk: 'デート代などの費用は、その都度話し合って決めます。'
+  var PHONE = {
+    nolook: '甲と乙は、相手のスマートフォンやメッセージを、【相手の同意なく見ません】。',
+    consent: '甲と乙は、相手のスマートフォンを、【本人の同意があるときだけ】見ます。不安があるときは、まず言葉で伝えます。',
+    open: '甲と乙は、【互いにスマートフォンを隠さず】、相手に見られて困るやり取りをしないようにします。'
   };
   var SNS = {
-    public: '二人の関係は、SNSや動画で公開してよいものとします。ただし、相手が嫌がる内容は投稿しません。',
-    anon: '二人の関係は、相手を特定できない形であれば、SNSや動画で話題にしてよいものとします。',
-    private: '二人の関係は、相手の同意なく、SNSや動画で公開しません。'
+    free: 'SNSでの他の人とのやり取りは、【これまでどおり自由に】行います。ただし、相手が嫌な気持ちになる投稿やメッセージは控えます。',
+    dm: 'SNSでの他の人との個別のメッセージ（DM）は、【相手に隠さず】、聞かれたら誰とのやり取りかを答えます。',
+    min: 'SNSでの他の人との私的な交流は、【最小限にとどめます】。'
+  };
+  var COAT = {
+    none: '甲と乙は、上着や身に着ける物を、他の人に【貸しません】。',
+    small: '甲と乙は、他の人に貸してよい物を、【マフラー、ストール、手袋、ブランケットなどの小物に限ります】。',
+    buy: '甲と乙は、他の人が寒そうなときは、自分の物を貸すのではなく、【新品の物を買って渡します】。',
+    ok: '甲と乙は、上着を含め、身に着ける物を他の人に【貸してよい】ものとします。'
+  };
+  var MONEY = {
+    split: 'デート代などの費用は、原則として【割り勘】とします。',
+    turn: 'デート代などの費用は、【交代で支払います】。',
+    more: 'デート代などの費用は、【収入の多い方が多めに負担します】。',
+    talk: 'デート代などの費用は、【その都度話し合って決めます】。'
+  };
+  var EX = {
+    none: '甲と乙は、過去の恋人と、【連絡を取りません】。',
+    tell: '甲と乙は、過去の恋人と連絡を取るときは、【事前に相手へ伝えます】。',
+    normal: '甲と乙は、過去の恋人であっても、【友人として自然に付き合ってよい】ものとします。'
   };
   var FIGHT = {
-    same: 'その日のうちに話し合うこと',
-    noignore: '連絡を無視しないこと',
-    nothird: '友人や家族を巻き込まないこと',
-    nobad: '暴力や人格を否定する言葉を使わないこと',
-    apology: '悪かったと思ったら先に謝ること'
+    words: '【不安や嫉妬を感じたら、我慢せず言葉にして伝えること】',
+    same: '【その日のうちに話し合うこと】',
+    noignore: '【連絡を無視しないこと】',
+    nothird: '【友人や家族を巻き込まないこと】',
+    nobad: '【暴力や人格を否定する言葉を使わないこと】',
+    apology: '【悪かったと思ったら先に謝ること】'
   };
-  var PENALTY = {
-    talk: '本契約に違反したときは、二人で話し合い、ルールを見直します。',
-    treat: '本契約に違反したときは、違反した方が相手にごはんをごちそうします。',
-    letter: '本契約に違反したときは、違反した方が反省の手紙を書きます。',
-    day: '本契約に違反したときは、違反した方が相手のお願いを1日聞きます。'
+  var FUTURE = {
+    yearly: '甲と乙は、同居や結婚など将来のことについて、【年に1回】は話し合います。',
+    step: '甲と乙は、同居や結婚など将来のことについて、【節目のたびに】話し合います。',
+    natural: '甲と乙は、同居や結婚など将来のことについて、焦らず、【自然な流れに任せます】。'
   };
+  function hl(t) { return '【' + String(t).replace(/[【】]/g, '').replace(/\r\n?/g, '\n').split('\n').join('】\n【') + '】'; }
   var FIXED = '契約番号甲乙令和平成年月日元0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_-/印＿（）「」、。第条〜 /';
 
   function $(id) { return document.getElementById(id); }
-  var elMe = $('f-me'), elPartner = $('f-partner'), elDate = $('f-date'), elFree = $('f-free');
+  var elMe = $('f-me'), elCoat = $('f-coat'), elOut = $('f-out');
   var sheets = $('sheets'), msgEl = $('msg'), btnPng = $('btn-png'), btnPdf = $('btn-pdf'), btnX = $('btn-x');
 
   function pad(n) { return String(n).padStart(2, '0'); }
@@ -336,43 +407,55 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
   /* ---- 回答の読み取り ---- */
   function radio(n) { var e = document.querySelector('input[name="' + n + '"]:checked'); return e ? e.value : ''; }
   function checks(n) { return Array.prototype.map.call(document.querySelectorAll('input[name="' + n + '"]:checked'), function (i) { return i.value; }); }
+  function xv(id) { var e = $(id); return e ? e.value.trim().replace(/[。.\s]+$/, '') : ''; }
+  function xs(a, k) { return a.x[k] ? 'ただし、' + hl(a.x[k]) + 'は例外とします。' : ''; }
   function answers() {
     return {
       me: elMe.value.trim(),
-      partner: elPartner.value.trim(),
-      date: elDate.value,
+      partner: CFG.partner,
+      date: CFG.date,
       excl: radio('excl') || 'no',
       contact: radio('contact') || 'daily',
-      meet: radio('meet') || 'm2',
+      phone: radio('phone') || 'nolook',
+      sns: radio('sns') || 'free',
+      coat: radio('coat') || 'small',
+      coatNote: elCoat.value.trim().replace(/[。.\s]+$/, ''),
       money: radio('money') || 'split',
-      sns: radio('sns') || 'anon',
+      ex: radio('ex') || 'tell',
       fight: checks('fight'),
-      penalty: radio('penalty') || 'talk',
-      free: elFree.value.trim()
+      future: radio('future') || 'step',
+      out: elOut.value.trim(),
+      x: {
+        excl: xv('x-excl'), contact: xv('x-contact'), phone: xv('x-phone'), sns: xv('x-sns'),
+        money: xv('x-money'), ex: xv('x-ex'), future: xv('x-future')
+      }
     };
   }
 
   /* ---- 契約書の文面 ---- */
   function buildDoc(a) {
-    var me = a.me || '＿＿＿＿＿＿', pa = a.partner || '＿＿＿＿＿＿';
+    var me = a.me || '＿＿＿＿＿＿', pa = a.partner;
     var pre = me + '（以下「甲」といいます。）と' + pa + '（以下「乙」といいます。）は、互いを唯一の恋人として大切にするため、次のとおり契約を締結します。';
     var c = [];
-    c.push(['第1条（目的）', '甲と乙は、互いに思いやりと誠実さをもって向き合い、二人の関係を大切に育てるため、本契約を結びます。']);
-    c.push(['第2条（独占）', EXCL[a.excl]]);
-    c.push(['第3条（連絡）', CONTACT[a.contact]]);
-    c.push(['第4条（会う頻度）', '甲と乙は、' + MEET[a.meet] + '会う時間をつくります。']);
-    c.push(['第5条（お金）', MONEY[a.money] + 'お金の貸し借りは、必ず事前に相談します。']);
-    c.push(['第6条（SNS）', SNS[a.sns]]);
-    c.push(['第7条（ケンカのルール）', a.fight.length
-      ? 'ケンカをしたときは、次のことを守ります。' + a.fight.map(function (k) { return FIGHT[k]; }).join('、') + '。'
-      : 'ケンカをしたときは、冷静になってから話し合います。']);
-    c.push(['第8条（違反したとき）', PENALTY[a.penalty]]);
-    c.push(['第9条（見直しと解除）', '本契約は、締結日から効力を生じます。甲と乙は、毎年の記念日に内容を見直します。いずれかが解除を申し出たときは、話し合いのうえ終了できます。']);
-    c.push(['第10条（特約事項）', a.free ? a.free.replace(/\r\n?/g, '\n') : '特にありません。']);
+    c.push(['第1条（目的）', '甲と乙は、互いに思いやりと誠実さをもって向き合い、二人の関係を大切に育てるため、本契約を結びます。本契約の各条項は、甲と乙に等しく適用されます。']);
+    c.push(['第2条（独占）', EXCL[a.excl] + xs(a, 'excl')]);
+    c.push(['第3条（連絡）', CONTACT[a.contact] + xs(a, 'contact')]);
+    c.push(['第4条（スマホ）', PHONE[a.phone] + xs(a, 'phone')]);
+    c.push(['第5条（SNS）', SNS[a.sns] + xs(a, 'sns')]);
+    c.push(['第6条（持ち物の貸し出し）', COAT[a.coat] + (a.coatNote ? 'ただし、' + hl(a.coatNote) + '。' : '')]);
+    c.push(['第7条（お金）', MONEY[a.money] + xs(a, 'money') + 'お金の貸し借りは、必ず事前に相談します。']);
+    c.push(['第8条（過去の恋人）', EX[a.ex] + xs(a, 'ex')]);
+    c.push(['第9条（不安とケンカ）', a.fight.length
+      ? '不安を感じたときやケンカをしたときは、次のことを守ります。' + a.fight.map(function (k) { return FIGHT[k]; }).join('、') + '。'
+      : '不安を感じたときやケンカをしたときは、冷静になってから話し合います。']);
+    c.push(['第10条（将来）', FUTURE[a.future] + xs(a, 'future')]);
+    c.push(['第11条（即時終了事項）', a.out
+      ? '次のことが行われたときは、直ちに本契約を終了できるものとします。\n' + hl(a.out)
+      : '直ちに本契約を終了する事項は、特に定めません。']);
     var closing = '本契約の成立を証するため、本書の電子データを作成し、甲乙各自がこれを保管します。';
-    var all = FIXED + CFG.title + CFG.sub + CFG.wmText + CFG.wmSub + CFG.footer + pre + closing + jp(a.date) +
-      c.map(function (x) { return x[0] + x[1]; }).join('') + a.me + a.partner;
-    return { pre: pre, clauses: c, closing: closing, no: 'LV-' + (a.date || todayStr()).replace(/-/g, '') + '-' + RAND, all: all };
+    var all = FIXED + CFG.title + CFG.sub + CFG.wmText + CFG.wmSub + CFG.footer + pre + closing + jp(a.date) + '恋人' +
+      c.map(function (x) { return x[0] + x[1]; }).join('').replace(/[【】]/g, '') + a.me + a.partner;
+    return { pre: pre, clauses: c, closing: closing, no: 'LV-' + (a.date ? a.date.replace(/-/g, '') + '-' : '') + RAND, all: all };
   }
 
   /* ---- 文字組み(禁則処理つきの折り返し) ---- */
@@ -397,6 +480,43 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
     return lines.length ? lines : [''];
   }
 
+  /* ---- 強調つきの折り返し（【】の内側が強調） ---- */
+  function parseRuns(para) {
+    var out = [], on = false;
+    Array.from(para).forEach(function (c) {
+      if (c === '【') on = true;
+      else if (c === '】') on = false;
+      else out.push({ c: c, h: on });
+    });
+    return out;
+  }
+  function cwid(ctx, ch) { ctx.font = ch.h ? f(700, HS) : f(400, FS); return ctx.measureText(ch.c).width; }
+  function wrapRuns(ctx, chars, w1, w2) {
+    var lines = [], cur = [], w = 0, limit = w1;
+    chars.forEach(function (ch) {
+      var cw = cwid(ctx, ch);
+      if (w + cw > limit && cur.length) {
+        if (NO_START.has(ch.c)) { cur.push(ch); w += cw; return; }
+        var carry = null;
+        if (NO_END.has(cur[cur.length - 1].c)) carry = cur.pop();
+        lines.push(cur);
+        limit = w2;
+        cur = carry ? [carry, ch] : [ch];
+        w = cur.reduce(function (s, x) { return s + cwid(ctx, x); }, 0);
+      } else { cur.push(ch); w += cw; }
+    });
+    if (cur.length) lines.push(cur);
+    return lines.length ? lines : [[]];
+  }
+  function toRuns(line) {
+    var runs = [];
+    line.forEach(function (ch) {
+      var l = runs[runs.length - 1];
+      if (l && l.h === ch.h) l.s += ch.c; else runs.push({ s: ch.c, h: ch.h });
+    });
+    return runs;
+  }
+
   function sealOf(s) {
     var c = Array.from((s || '').replace(/[\s　＿_]/g, ''));
     return c.length >= 2 ? c.slice(0, 2).join('') : c.join('');
@@ -419,7 +539,7 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
       push({ k: 't', s: ln, x: MX + (i === 0 ? FS : 0), y: y + LH / 2, font: f(400, FS) });
       y += LH;
     });
-    y += 18;
+    y += PG;
 
     d.clauses.forEach(function (cl) {
       var h = cl[0];
@@ -429,20 +549,22 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
       need(LH * 2);
       var first = true;
       cl[1].split('\n').forEach(function (para) {
-        var lines = first ? wrap(ctx, para, TW - hw, TW) : wrap(ctx, para, TW, TW);
+        var chars = parseRuns(para);
+        var lines = first ? wrapRuns(ctx, chars, TW - hw, TW) : wrapRuns(ctx, chars, TW, TW);
         lines.forEach(function (ln, i) {
           need(LH);
+          var runs = toRuns(ln);
           if (first && i === 0) {
             push({ k: 't', s: h, x: MX, y: y + LH / 2, font: f(700, FS) });
-            push({ k: 't', s: ln, x: MX + hw, y: y + LH / 2, font: f(400, FS) });
+            push({ k: 'runs', runs: runs, x: MX + hw, y: y + LH / 2 });
           } else {
-            push({ k: 't', s: ln, x: MX, y: y + LH / 2, font: f(400, FS) });
+            push({ k: 'runs', runs: runs, x: MX, y: y + LH / 2 });
           }
           y += LH;
         });
         first = false;
       });
-      y += 12;
+      y += CG;
     });
 
     y += 8;
@@ -458,15 +580,15 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
     push({ k: 't', s: jp(a.date), x: MX, y: y + LH / 2, font: f(400, 24) });
     y += LH + 24;
 
-    function row(label, name) {
+    function row(label, name, seal) {
       push({ k: 't', s: label, x: MX, y: y + 34, font: f(700, 26) });
       push({ k: 't', s: name, x: MX + 66, y: y + 34, font: f(400, 26) });
       push({ k: 'line', x1: MX + 54, x2: MX + TW - 140, y: y + 62 });
-      push({ k: 'seal', cx: MX + TW - 58, cy: y + 36, r: 36, s: sealOf(name) });
+      push({ k: 'seal', cx: MX + TW - 58, cy: y + 36, r: 36, s: seal });
       y += 96;
     }
-    row('甲', a.me);
-    row('乙', a.partner);
+    row('甲', a.me, sealOf(a.me));
+    row('乙', a.partner, '恋人');
 
     pages.forEach(function (ops, i) {
       ops.push({ k: 't', s: CFG.footer, x: MX, y: PH - 58, font: f(400, 16), color: SUB });
@@ -522,6 +644,20 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
         ctx.font = op.font; ctx.fillStyle = op.color || INK;
         ctx.textAlign = op.align || 'left'; ctx.textBaseline = 'middle';
         ctx.fillText(op.s, op.x, op.y);
+      } else if (op.k === 'runs') {
+        var rx = op.x;
+        ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        op.runs.forEach(function (r) {
+          ctx.font = r.h ? f(700, HS) : f(400, FS);
+          ctx.fillStyle = r.h ? HL : INK;
+          ctx.fillText(r.s, rx, op.y);
+          var rw = ctx.measureText(r.s).width;
+          if (r.h) {
+            ctx.strokeStyle = HL; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(rx, op.y + Math.round(HS * 0.62)); ctx.lineTo(rx + rw, op.y + Math.round(HS * 0.62)); ctx.stroke();
+          }
+          rx += rw;
+        });
       } else if (op.k === 'title') {
         var sp = 24, chars = Array.from(op.s);
         ctx.font = f(700, 50); ctx.fillStyle = INK; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
@@ -555,7 +691,13 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
       } catch (e) { /* 代替フォントで描画する */ }
     }
     if (my !== seq) return;
-    var pages = layout(document.createElement('canvas').getContext('2d'), a, d);
+    /* 1枚に収めたいので、はみ出すときは文字を少しずつ小さくして組み直す（最小で約8.6pt） */
+    var pages, tctx = document.createElement('canvas').getContext('2d');
+    for (var k = 0, sc = [1, 0.95, 0.9, 0.86, 0.82, 0.78]; k < sc.length; k++) {
+      FS = Math.round(22 * sc[k]); LH = Math.round(38 * sc[k]); HS = FS + 2; PG = Math.round(40 * sc[k]); CG = Math.round(26 * sc[k]);
+      pages = layout(tctx, a, d);
+      if (pages.length === 1) break;
+    }
     var wait = $('pv-wait'); if (wait) wait.remove();
     while (canvases.length < pages.length) {
       var c = document.createElement('canvas'); c.setAttribute('role', 'img');
@@ -575,7 +717,7 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
   var busy = false, status = '';
   var J = window.jspdf && window.jspdf.jsPDF;
 
-  function namesOk() { var a = answers(); return !!(a.me && a.partner); }
+  function namesOk() { return !!answers().me; }
   function updateBar() {
     var ok = namesOk();
     var fallback = dl === null;
@@ -584,7 +726,7 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
     btnPdf.hidden = fallback;
     btnPdf.disabled = !(ok && dl && J && !busy);
     if (status) msgEl.textContent = status;
-    else if (!ok) msgEl.textContent = 'Q1の二人のお名前を入れると保存できます。';
+    else if (!ok) msgEl.textContent = 'Q1のニックネームを入れると保存できます。';
     else if (fallback) msgEl.textContent = 'この画面では直接保存できません。「保存用の画像を表示」から、長押し（右クリック）で保存してください。';
     else msgEl.textContent = 'できあがり。保存して、Xに投稿してみましょう。';
   }
@@ -593,7 +735,7 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
   function fileBase() {
     var a = answers();
     function s(v) { return v.replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 10); }
-    return '独占契約書_' + (s(a.me) || 'me') + '_' + (s(a.partner) || 'partner');
+    return '恋人独占契約書_' + (s(a.me) || 'me');
   }
   function toBlob(c) { return new Promise(function (res) { c.toBlob(res, 'image/png'); }); }
   async function fresh() { clearTimeout(timer); await render(); return canvases.slice(); }
@@ -667,14 +809,19 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
   btnPng.addEventListener('click', savePng);
   btnPdf.addEventListener('click', savePdf);
   $('btn-closebox').addEventListener('click', function () { $('savebox').hidden = true; });
-  btnX.href = 'https://x.com/intent/post?text=' + encodeURIComponent('独占契約書ができました！ ' + CFG.hashtag);
+  btnX.href = 'https://x.com/intent/post?text=' + encodeURIComponent(('独占契約書ができました！ ' + CFG.hashtag).trim());
 
   /* ---- 入力まわり ---- */
-  elDate.value = todayStr();
-  elFree.addEventListener('input', function () { $('cnt').textContent = String(Array.from(elFree.value).length); });
+  elOut.addEventListener('input', function () { $('cnt').textContent = String(Array.from(elOut.value).length); });
   var form = $('form');
   form.addEventListener('submit', function (e) { e.preventDefault(); });
   function onEdit() { status = ''; $('savebox').hidden = true; updateBar(); schedule(); }
+  form.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('.chip-btn') : null;
+    if (!b) return;
+    var i = $(b.getAttribute('data-for'));
+    if (i) { i.value = b.textContent; i.dispatchEvent(new Event('input', { bubbles: true })); }
+  });
   form.addEventListener('input', onEdit);
   form.addEventListener('change', onEdit);
 
@@ -698,6 +845,7 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
   render();
 })();
 </script>
+
 
 </body>
 </html>
