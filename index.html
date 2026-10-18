@@ -3,11 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="12個の質問に答えると、パートナーとの独占契約書ができる試作版フォームです。">
+<meta name="description" content="質問に答えると、独占契約書ができるフォームです。個人が作った非公式のもので、法的な効力もありません。">
 <style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>独占契約書メーカー（非公式）</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
 <style>
+/* 五線譜の音部記号（ト音記号・ヘ音記号の2文字だけを抜き出して埋め込み）。出典: GNU FreeFont (FreeSerif)。GPLv3＋フォント埋め込み例外 */
+@font-face{font-family:"StaffClef";src:url(data:font/woff;base64,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) format("woff")}
 /* 設計: 左に11問の質問、右に紙の契約書。プレビューの描画結果がそのまま画像/PDFになる。
    色は主のカラー（メイン #82ACC8 の水色、サブ #B5B6B6 のシルバー）。文字に使う濃い青はメインから起こした色。朱色は印影だけ。 */
 :root{
@@ -16,10 +18,10 @@
   --ink:#1b2630;
   --muted:#5d6872;
   --line:#d6dadd;
-  --sub:#B5B6B6;
-  --main:#82ACC8;
-  --accent:#2F6384;
-  --accent-ink:#0f2230;
+  --sub:#b9bdc4;
+  --main:#c3cad4;
+  --accent:#1f3a5f;
+  --accent-ink:#10192b;
   --shadow:0 1px 2px rgb(20 40 60 / .10),0 10px 28px rgb(20 40 60 / .10);
   --font-ui:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
   --font-serif:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;
@@ -27,13 +29,13 @@
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
     --bg:#0f151b;--surface:#18212a;--ink:#e6edf2;--muted:#9aa7b2;--line:#2a3641;--sub:#5b6670;
-    --accent:#8fbad6;--accent-ink:#0b1a24;--shadow:0 1px 2px rgb(0 0 0 / .4),0 10px 28px rgb(0 0 0 / .45);
+    --accent:#a9b9d3;--accent-ink:#0d1522;--shadow:0 1px 2px rgb(0 0 0 / .4),0 10px 28px rgb(0 0 0 / .45);
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --bg:#0f151b;--surface:#18212a;--ink:#e6edf2;--muted:#9aa7b2;--line:#2a3641;--sub:#5b6670;
-    --accent:#8fbad6;--accent-ink:#0b1a24;--shadow:0 1px 2px rgb(0 0 0 / .4),0 10px 28px rgb(0 0 0 / .45);
+    --accent:#a9b9d3;--accent-ink:#0d1522;--shadow:0 1px 2px rgb(0 0 0 / .4),0 10px 28px rgb(0 0 0 / .45);
   color-scheme:dark;
 }
 
@@ -120,7 +122,7 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
 
 <div class="wrap">
   <header class="top">
-    <p class="eyebrow">みんなの独占契約書を見てみよう<span class="badge">非公式・ファンの試作</span></p>
+    <p class="eyebrow">独占契約書フォーム、作ってみた<span class="badge">非公式</span></p>
     <h1>独占契約書メーカー</h1>
   </header>
 
@@ -269,7 +271,7 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
         <p class="count"><span id="cnt">0</span> / 200</p>
       </div>
 
-      <p class="note">ファンが個人で作った非公式の試作です。ネタとして楽しむための簡易的な雛形で、法的な効力や拘束力を保証するものではありません。</p>
+      <p class="note">個人が作った、非公式のフォームです。法的な効力もありません。</p>
     </form>
 
     <aside class="preview" aria-label="契約書プレビュー">
@@ -308,19 +310,23 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
     /* 乙の表記は固定。契約日は企画日が決まったら 'YYYY-MM-DD' を入れる（空欄なら「令和　年　月　日」） */
     partner: 'パートナー',
     date: '',
-    /* 試作版の表示。本番にするときは watermark を false にする */
+    /* サンプル表示。本番にするときは watermark を false にする */
     watermark: true,
     wmText: 'SAMPLE',
-    wmSub: '非公式・試作版',
-    footer: '非公式の試作版（ファン制作）。ネタ用の雛形で、法的効力を保証するものではありません。'
+    wmSub: '非公式',
+    footer: '個人が作った、非公式のフォームです。法的な効力もありません。',
+    /* 配色と飾り。'plain' = 一般的な配色（既定）。'fan' = 推しのカラー＋五線譜・鍵盤（ご本人の了承後に使う） */
+    theme: 'plain'
   };
 
   /* ---- 紙のサイズ(A4・150dpi)と文字組み ---- */
-  var PW = 1240, PH = 1754, MX = 110, MT = 110, MB = 100, TW = PW - MX * 2;
+  var PW = 1240, PH = 1754, MX = 110, MT = 110, MB = 96, TW = PW - MX * 2;
   var FS = 22, LH = 38, HS = 24, PG = 40, CG = 26, HL = '#2F6384';  /* 回答が反映された箇所は、太字・少し大きく・青で強調 */
   var SERIF = '"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","MS PMincho",serif';
   var INK = '#1b1b1f', SUB = '#6b7076', RED = '#c1281b';
-  var MAIN = '#82ACC8', SILVER = '#B5B6B6', DEEP = '#2F6384', MARK = 'rgba(130,172,200,0.38)';
+  var FAN = CFG.theme === 'fan';
+  var MAIN = FAN ? '#82ACC8' : '#4b5563', SILVER = FAN ? '#B5B6B6' : '#b9bdc4', DEEP = FAN ? '#2F6384' : '#1f3a5f', MARK = FAN ? 'rgba(130,172,200,0.38)' : 'rgba(140,155,180,0.30)';
+  HL = DEEP;
   function f(w, s) { return w + ' ' + s + 'px ' + SERIF; }
 
   /* ---- 選択肢ごとの条文（【】で囲んだ部分が、回答として強調される） ---- */
@@ -521,7 +527,6 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
     function push(op) { pages[pages.length - 1].push(op); }
     function need(h) { if (y + h > PH - MB) { pages.push([]); y = MT; } }
 
-    push({ k: 't', s: '契約番号 ' + d.no, x: PW - MX, y: 62, font: f(400, 17), color: SUB, align: 'right' });
     push({ k: 'title', s: CFG.title, y: MT + 30 });
     push({ k: 't', s: CFG.sub, x: PW / 2, y: MT + 80, font: f(400, 22), color: SUB, align: 'center' });
     push({ k: 'rule', y: MT + 110 });
@@ -585,8 +590,8 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
     row('乙', a.partner, '恋人');
 
     pages.forEach(function (ops, i) {
-      ops.push({ k: 't', s: CFG.footer, x: MX, y: PH - 58, font: f(400, 16), color: SUB });
-      if (pages.length > 1) ops.push({ k: 't', s: (i + 1) + ' / ' + pages.length, x: PW - MX, y: PH - 58, font: f(400, 16), color: SUB, align: 'right' });
+      ops.push({ k: 't', s: CFG.footer, x: MX, y: PH - 62, font: f(400, 16), color: SUB });
+      ops.push({ k: 't', s: (pages.length > 1 ? (i + 1) + ' / ' + pages.length + '　' : '') + '契約番号 ' + d.no, x: PW - MX, y: PH - 62, font: f(400, 16), color: SUB, align: 'right' });
       if (CFG.watermark) ops.push({ k: 'wm' });
     });
     return pages;
@@ -617,14 +622,49 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
     ctx.restore();
   }
 
+  var clefOk = false;
+  /* タイトルを【 】のようにはさむ五線譜。左はト音記号つき、右は終止線で終わる */
+  function drawTitleStaff(ctx, cy, xl1, xl2, xr1, xr2) {
+    var sp = 10, top = cy - 2 * sp, i;
+    ctx.save();
+    ctx.strokeStyle = SILVER; ctx.lineWidth = 1.6;
+    for (i = 0; i < 5; i++) {
+      ctx.beginPath(); ctx.moveTo(xl1, top + i * sp); ctx.lineTo(xl2, top + i * sp); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(xr1, top + i * sp); ctx.lineTo(xr2, top + i * sp); ctx.stroke();
+    }
+    [[xl1, 1.6], [xl2, 1.6], [xr1, 1.6], [xr2 - 12, 1.6], [xr2 - 3, 5]].forEach(function (v) {
+      ctx.lineWidth = v[1]; ctx.beginPath(); ctx.moveTo(v[0], top); ctx.lineTo(v[0], top + 4 * sp); ctx.stroke();
+    });
+    if (clefOk) {
+      ctx.fillStyle = MAIN; ctx.font = Math.round(sp * 6.06) + 'px StaffClef'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+      ctx.fillText('\u{1D11E}', xl1 + 12, top + 4 * sp - sp * 0.1);
+    }
+    ctx.restore();
+  }
+
+  /* 下端のピアノの鍵盤（グレーと白・コードで描画）。ドから始まり、白鍵48本 */
+  function drawKeys(ctx) {
+    var n = 48, kw = PW / n, h = 40, y0 = PH - h, i, x;
+    ctx.save();
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, y0, PW, h);
+    ctx.strokeStyle = '#b9bbbe'; ctx.lineWidth = 1.5;
+    for (i = 0; i < n; i++) { x = i * kw; ctx.strokeRect(x + 0.75, y0 + 0.75, kw - 1.5, h - 1.5); }
+    ctx.fillStyle = '#a3a6aa';
+    for (i = 0; i < n - 1; i++) {
+      var m = i % 7;
+      if (m === 0 || m === 1 || m === 3 || m === 4 || m === 5) ctx.fillRect((i + 1) * kw - kw * 0.3, y0, kw * 0.6, h * 0.6);
+    }
+    ctx.restore();
+  }
+
   function drawWm(ctx) {
     ctx.save();
     ctx.translate(PW / 2, PH / 2);
     ctx.rotate(-Math.PI / 6);
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillStyle = 'rgba(90,130,160,0.16)';
-    ctx.font = f(700, 190); ctx.fillText(CFG.wmText, 0, -40);
-    ctx.font = f(700, 64); ctx.fillText(CFG.wmSub, 0, 90);
+    ctx.fillStyle = FAN ? 'rgba(90,130,160,0.16)' : 'rgba(100,105,115,0.17)';
+    ctx.font = f(700, 270); ctx.fillText(CFG.wmText, 0, -60);
+    ctx.font = f(700, 96); ctx.fillText(CFG.wmSub, 0, 120);
     ctx.restore();
   }
 
@@ -634,7 +674,7 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, PW, PH);
     ctx.fillStyle = MAIN; ctx.fillRect(0, 0, PW, 18);
-    ctx.fillStyle = SILVER; ctx.fillRect(0, PH - 18, PW, 18);
+    if (FAN) drawKeys(ctx);
     ops.forEach(function (op) {
       if (op.k === 't') {
         ctx.font = op.font; ctx.fillStyle = op.color || INK;
@@ -663,6 +703,7 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
         ctx.font = f(700, 50); ctx.fillStyle = INK; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
         var total = chars.reduce(function (s, c) { return s + ctx.measureText(c).width; }, 0) + sp * (chars.length - 1);
         var x = PW / 2 - total / 2;
+        if (FAN) drawTitleStaff(ctx, op.y, MX, x - 28, x + total + 28, MX + TW);
         chars.forEach(function (c) { ctx.fillText(c, x, op.y); x += ctx.measureText(c).width + sp; });
       } else if (op.k === 'rule') {
         ctx.strokeStyle = MAIN;
@@ -688,10 +729,11 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
     var a = answers(), d = buildDoc(a);
     if (document.fonts && document.fonts.load) {
       try {
-        await withTimeout(Promise.all([document.fonts.load(f(400, FS), d.all), document.fonts.load(f(700, FS), d.all)]), 4000);
+        await withTimeout(Promise.all([document.fonts.load(f(400, FS), d.all), document.fonts.load(f(700, FS), d.all), document.fonts.load('60px StaffClef', '\u{1D11E}\u{1D122}')]), 4000);
       } catch (e) { /* 代替フォントで描画する */ }
     }
     if (my !== seq) return;
+    try { clefOk = !!(document.fonts && document.fonts.check && document.fonts.check('60px StaffClef', '\u{1D11E}')); } catch (e) { clefOk = false; }
     /* 1枚に収めたいので、はみ出すときは文字を少しずつ小さくして組み直す（最小で約8.6pt） */
     var pages, tctx = document.createElement('canvas').getContext('2d');
     for (var k = 0, sc = [1, 0.95, 0.9, 0.86, 0.82, 0.78, 0.74, 0.7]; k < sc.length; k++) {
@@ -709,7 +751,7 @@ textarea.field{min-height:116px;resize:vertical;line-height:1.6}
       canvases[i].setAttribute('aria-label', '契約書 ' + (i + 1) + 'ページ目');
       drawPage(canvases[i], ops);
     });
-    $('pv-pages').textContent = pages.length + 'ページ' + (CFG.watermark ? '・試作版' : '');
+    $('pv-pages').textContent = pages.length + 'ページ' + (CFG.watermark ? '・サンプル' : '');
   }
   function schedule() { clearTimeout(timer); timer = setTimeout(function () { render(); }, 140); }
 
