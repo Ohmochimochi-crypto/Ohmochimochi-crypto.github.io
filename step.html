@@ -89,6 +89,7 @@ h1{margin:0 0 12px;font-family:var(--font-serif);font-weight:700;font-size:clamp
 .field{display:block;width:100%;box-sizing:border-box;font:inherit;font-size:16px;color:var(--ink);background:var(--surface);border:1px solid var(--sub);border-radius:10px;padding:14px 16px}
 .field:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
 textarea.field{min-height:132px;resize:vertical;line-height:1.6}
+.free-note{margin:8px 0 0;font-size:13px;line-height:1.6;color:var(--muted)}
 .count-txt{margin:6px 0 0;text-align:right;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
 
 .opts{display:grid;gap:10px}
@@ -175,6 +176,18 @@ body[data-mode="final"] .preview{display:block}
 .mascot{flex:none}
 @media (prefers-reduced-motion:reduce){.stamp.go svg,.stamp.go::after,.done.go{animation:none}.stamp.go .ink{filter:url(#rough)}}
 
+/* 言語の切り替え（表紙） */
+.lang{display:inline-flex;margin:0 0 16px;border:1px solid var(--accent);border-radius:8px;overflow:hidden}
+.lang-btn{min-height:40px;padding:6px 16px;border:0;background:transparent;color:var(--accent);font-size:14px;font-weight:700;cursor:pointer}
+.lang-btn[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
+.lang-btn:focus-visible{outline:2px solid var(--accent);outline-offset:-4px}
+
+/* 英訳の切り替え */
+.en-toggle{position:relative;display:flex;align-items:center;gap:10px;min-height:48px;padding:10px 14px;border:1px solid var(--sub);border-radius:10px;background:var(--surface);cursor:pointer;font-weight:700}
+.en-toggle input{width:20px;height:20px;margin:0;accent-color:var(--accent);flex:none}
+.en-toggle input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.en-sub{margin-left:4px;font-weight:400;font-size:13px;color:var(--muted)}
+
 /* パソコン: 左に質問、右に契約書を常時表示 */
 @media (min-width:900px){
   body{padding-block:0 48px}
@@ -210,30 +223,31 @@ body[data-mode="final"] .preview{display:block}
   </section>
 
   <aside class="preview" id="preview" aria-label="契約書プレビュー">
-    <div class="pv-head"><h2>できあがりプレビュー</h2><span class="pv-note" id="pv-pages"></span></div>
+    <div class="pv-head"><h2 id="pv-title">できあがりプレビュー</h2><span class="pv-note" id="pv-pages"></span></div>
     <div id="sheets" class="sheets"><p class="pv-wait" id="pv-wait">契約書を準備しています…</p></div>
   </aside>
 
   <div class="actions" id="actions" hidden>
     <p class="msg" id="msg" role="status" aria-live="polite"></p>
+    <label class="en-toggle"><input type="checkbox" id="en-toggle"><span>英訳を付ける <span class="en-sub">Add English</span></span></label>
     <div class="act-grid">
       <button class="btn" id="btn-png" type="button">PNG画像で保存</button>
       <button class="btn sub" id="btn-pdf" type="button">PDFで保存</button>
       <a class="btn sub wide" id="btn-x" href="#" target="_blank" rel="noopener noreferrer">Xに投稿する</a>
       <button class="btn sub wide" id="btn-show" type="button">保存できないとき：画像を表示（長押しで保存）</button>
     </div>
-    <p class="hint">Xの投稿画面が開いたら、保存した画像を添付してください。</p>
+    <p class="hint" id="hint-x">Xの投稿画面が開いたら、保存した画像を添付してください。</p>
     <div class="savebox" id="savebox" hidden>
-      <p class="savebox-msg">画像を長押し（パソコンは右クリック）して「画像を保存」を選んでください。コピーして、そのままXの投稿画面に貼り付けることもできます。</p>
+      <p class="savebox-msg" id="savebox-msg">画像を長押し（パソコンは右クリック）して「画像を保存」を選んでください。コピーして、そのままXの投稿画面に貼り付けることもできます。</p>
       <div class="savelist" id="savelist"></div>
       <button class="btn sub" id="btn-closebox" type="button">閉じる</button>
     </div>
     <div>
-      <p class="jumps-k">答えを直したい質問を選ぶ</p>
+      <p class="jumps-k" id="jumps-k">答えを直したい質問を選ぶ</p>
       <div class="jumps" id="jumps"></div>
     </div>
     <button class="restart" id="restart" type="button">最初からやり直す</button>
-    <p class="fine-end">個人が作った、非公式のフォームです。法的な効力もありません。</p>
+    <p class="fine-end" id="fine-end">個人が作った、非公式のフォームです。法的な効力もありません。</p>
   </div>
 </div>
 
@@ -260,7 +274,7 @@ body[data-mode="final"] .preview{display:block}
      【】で囲んだ部分が、回答として強調される。
      条番号は並び順から自動採番（第1条は目的で固定）。 */
   var QUESTIONS = [
-    { id: 'me', kind: 'text', short: 'ニックネーム', label: 'あなたのニックネーム', ph: '例：たろう', max: 12, required: true, reqMsg: 'ニックネームを入れると進めます' },
+    { id: 'me', kind: 'text', short: 'ニックネーム', label: 'あなたのニックネーム', ph: '例：たろう', max: 12 },
     { id: 'excl', kind: 'single', title: '独占', short: '二人きり', label: 'パートナー以外の人と二人きりで過ごすのは？', def: 'no',
       options: [
         { v: 'no', l: '二人きりはNG', t: '甲と乙は、互いを唯一の交際相手とし、第三者と恋愛関係になりません。また、第三者と【二人きりで過ごすことは行いません】。' },
@@ -338,6 +352,102 @@ body[data-mode="final"] .preview{display:block}
   var CLOSING = '本契約書に記載のない事項、または本契約書の解釈に疑義が生じた事項については、甲乙は誠意をもって協議し、解決するものとします。';
   var N = QUESTIONS.length;
 
+  /* ---- 英訳（「英訳を付ける」をオンにしたときだけ、契約書に小さく添える） ---- */
+  var EN = {
+    sub: 'Exclusive Partner Agreement',
+    partner: 'Partner',
+    pre: function (me) { return (me || '______') + ' ("Party A") and Partner ("Party B") hereby enter into the following agreement to cherish each other as their one and only partner.'; },
+    purpose: 'Party A and Party B enter into this agreement to treat each other with care and sincerity and to nurture their relationship. Each article applies equally to both. In this agreement, "third party" means anyone other than Party A and Party B.',
+    closing: 'Any matter not covered by this agreement, or any doubt about its interpretation, shall be resolved through sincere discussion between Party A and Party B.',
+    footer: 'An unofficial form made by an individual. Not legally binding.',
+    exc: function (x) { return ' Exception: ' + x + '.'; },
+    note: function (x) { return ' Provided, however: ' + x + '.'; },
+    q: {
+      excl: { title: 'Exclusivity', o: {
+        no: 'Party A and Party B shall treat each other as their only partner and shall not enter into a romantic relationship with any third party. They also 【shall not spend time alone with any third party】.',
+        report: 'Party A and Party B shall treat each other as their only partner and shall not enter into a romantic relationship with any third party. Before spending time alone with a third party, they 【shall tell the other in advance】.',
+        free: 'Party A and Party B shall treat each other as their only partner and shall not enter into a romantic relationship with any third party. They 【shall respect each other\'s friendships】.' } },
+      contact: { title: 'Contact', o: {
+        morning: 'Party A and Party B shall 【say "good morning" and "good night" every day】.',
+        daily: 'Party A and Party B shall contact each other 【at least once a day】.',
+        free: 'There is no set frequency; they 【shall get in touch whenever they feel like it】. If unable to reply, they shall send a short note.' } },
+      phone: { title: 'Phones', o: {
+        nolook: 'Party A and Party B 【shall not look at each other\'s phone or messages without consent】.',
+        consent: 'Party A and Party B shall look at each other\'s phone 【only with the owner\'s consent】. If worried, they shall first talk it over.',
+        open: 'Party A and Party B 【shall keep nothing hidden on their phones】 and avoid exchanges they would not want the other to see.' } },
+      sns: { title: 'Social Media', o: {
+        free: 'Interaction with third parties on social media 【shall remain as free as before】, but posts or messages that would upset the other shall be avoided.',
+        dm: 'Direct messages with third parties on social media 【shall not be hidden】; if asked, they shall say who they are talking to.',
+        min: 'Private interaction with third parties on social media 【shall be kept to a minimum】.' } },
+      coat: { title: 'Lending Belongings', check: ' Instead of lending, they may also 【buy and give a new item】.', o: {
+        none: 'Party A and Party B 【shall not lend】 jackets or other clothing to any third party.',
+        small: 'Party A and Party B may lend third parties 【only small items such as scarves, stoles, gloves, and blankets】.',
+        ok: 'Party A and Party B 【may lend】 clothing, including jackets, to third parties.' } },
+      money: { title: 'Money', after: ' Lending or borrowing money shall always be discussed in advance.', o: {
+        split: 'Date expenses shall, as a rule, be 【split equally】.',
+        turn: 'Date expenses 【shall be paid in turns】.',
+        more: 'Date expenses 【shall be borne more by the one with the higher income】.',
+        talk: 'Date expenses 【shall be decided by discussion each time】.' } },
+      ex: { title: 'Former Partners', o: {
+        none: 'Party A and Party B 【shall not contact former partners】.',
+        tell: 'Before contacting a former partner, Party A and Party B 【shall tell the other in advance】.',
+        normal: 'Party A and Party B 【may keep a natural friendship】 with former partners.' } },
+      fight: { title: 'Worries and Quarrels', intro: 'When feeling anxious or after a quarrel, they shall ', joiner: '; ', end: '.',
+        empty: 'When feeling anxious or after a quarrel, they shall talk once they have calmed down.', o: {
+        words: '【put worries and jealousy into words instead of holding them in】',
+        same: '【talk it through the same day】',
+        noignore: '【not ignore messages】',
+        nothird: '【not involve friends or family】',
+        nobad: '【never use violence or words that deny the other\'s character】',
+        apology: '【apologize first when they think they were wrong】' } },
+      future: { title: 'The Future', o: {
+        yearly: 'Party A and Party B shall discuss their future, such as living together or marriage, 【at least once a year】.',
+        step: 'Party A and Party B shall discuss their future, such as living together or marriage, 【at each milestone】.',
+        natural: 'Party A and Party B shall approach their future, such as living together or marriage, without hurry, 【letting things take their natural course】.' } },
+      out: { title: 'Immediate Termination',
+        full: 'This agreement may be terminated immediately if any of the items written above occurs.',
+        empty: 'No grounds for immediate termination are specified.' }
+    }
+  };
+  var withEn = false;
+
+  /* ---- 画面の言語（日本語／English）。English を選ぶと、質問も英語になり、契約書の英訳も自動でオンになる ---- */
+  var LANG = 'ja';
+  try { if (!/^ja/i.test(navigator.language || 'ja')) LANG = 'en'; } catch (e) { /* 日本語のまま */ }
+  function T(j, e) { return LANG === 'en' ? e : j; }
+  var QEN = {
+    me: { short: 'Nickname', label: 'Your nickname', ph: 'e.g. Taro' },
+    excl: { short: 'Time alone', label: 'Spending time alone with someone other than your partner?',
+      o: { no: 'Not OK', report: 'OK if I tell them first', free: 'Friendships are free' },
+      exc: { ph: 'e.g. Family', ex: ['Family', 'Work', 'Friends'] } },
+    contact: { short: 'Contact', label: 'How often should you keep in touch?',
+      o: { morning: '"Good morning" and "good night" every day', daily: 'At least once a day', free: 'Whenever we feel like it' },
+      exc: { ph: 'e.g. Overtime days', ex: ['Overtime days', 'While traveling', 'Busy days'] } },
+    phone: { short: 'Phones', label: 'Can you look at your partner\'s phone?',
+      o: { nolook: 'No (I trust them)', consent: 'Only with consent', open: 'We keep our phones open' },
+      exc: { ph: 'e.g. Emergencies', ex: ['Emergencies', 'When sick', 'If it is lost'] } },
+    sns: { short: 'Social media', label: 'Interacting with others on social media?',
+      o: { free: 'As free as before', dm: 'No hidden DMs', min: 'Keep it minimal' },
+      exc: { ph: 'e.g. Hobby friends', ex: ['Hobby friends', 'Work contacts', 'Fan activities'] } },
+    coat: { short: 'Lending', label: 'What can your partner lend to others (like a jacket)?',
+      o: { none: 'Nothing', small: 'Small items only (scarves, stoles, etc.)', ok: 'Jackets are OK too' },
+      check: 'Buying a new one instead of lending is also OK', note: 'Condition (optional)  e.g. only on rainy days' },
+    money: { short: 'Money', label: 'How do you pay for dates?',
+      o: { split: 'Split the bill', turn: 'Take turns', more: 'Whoever earns more pays more', talk: 'Decide each time' },
+      exc: { ph: 'e.g. Birthdays', ex: ['Birthdays', 'Anniversaries', 'Trips'] } },
+    ex: { short: 'Exes', label: 'Contact with former partners?',
+      o: { none: 'No contact', tell: 'OK if I tell them first', normal: 'Natural friendship is fine' },
+      exc: { ph: 'e.g. Work matters', ex: ['Work matters', 'Mutual friends', 'Weddings/funerals'] } },
+    fight: { short: 'Quarrels', label: 'Rules for worries and quarrels?',
+      o: { words: 'Put worries and jealousy into words', same: 'Talk it through the same day', noignore: 'Never ignore messages', nothird: 'Don\'t involve friends or family', nobad: 'No violence or verbal abuse', apology: 'Apologize first if I was wrong' } },
+    future: { short: 'Future', label: 'Talking about the future (living together, marriage)?',
+      o: { yearly: 'At least once a year', step: 'At each milestone', natural: 'Let it take its natural course' },
+      exc: { ph: 'e.g. Job changes', ex: ['Job changes', 'Moving', 'Meeting parents'] } },
+    out: { short: 'Deal-breakers', label: 'Instant breakup! Absolute deal-breakers', ph: 'e.g. Lying again and again. Breaking promises three times in a row.' }
+  };
+  function qt(q, k) { var e = LANG === 'en' && QEN[q.id]; return e && e[k] != null ? e[k] : q[k]; }
+  function ot(q, o) { var e = LANG === 'en' && QEN[q.id]; return e && e.o && e.o[o.v] ? e.o[o.v] : o.l; }
+
   /* 条番号を並び順から自動採番（第1条＝目的） */
   (function () { var n = 1; QUESTIONS.forEach(function (q) { if (q.kind !== 'text') { n++; q.no = n; } }); })();
 
@@ -346,8 +456,11 @@ body[data-mode="final"] .preview{display:block}
   function freshState() {
     var s = { step: -1, v: {}, x: {}, chk: {}, note: {} };
     QUESTIONS.forEach(function (q) { s.v[q.id] = q.kind === 'single' ? q.def : (q.kind === 'multi' ? q.def.slice() : ''); });
+    s.v.me = defName(); s.meAuto = true; /* 名前は最初から「匿名希望」。書き換えたら、それを使う */
     return s;
   }
+  function defName() { return T('匿名希望', 'Anonymous'); }
+  function meName() { return S.v.me.trim() || defName(); }
   S = freshState();
 
   /* ---- 紙のサイズ(A4・150dpi)と文字組み ---- */
@@ -408,14 +521,29 @@ body[data-mode="final"] .preview{display:block}
     var fr = String(v).trim();
     return fr ? q.intro + hl(fr) : q.empty;
   }
+  function clauseEn(q) {
+    var e = EN.q[q.id]; if (!e) return '';
+    var v = S.v[q.id], t, x, nt;
+    if (q.kind === 'single') {
+      t = e.o[v] || e.o[q.options[0].v];
+      if (e.check && S.chk[q.id]) t += e.check;
+      x = clean(S.x[q.id]); if (q.exc && x) t += EN.exc(hl(x));
+      nt = clean(S.note[q.id]); if (q.extra && q.extra.note && nt) t += EN.note(hl(nt));
+      if (e.after) t += e.after;
+    } else if (q.kind === 'multi') {
+      var sel = q.options.filter(function (o) { return v.indexOf(o.v) >= 0; });
+      t = sel.length ? e.intro + sel.map(function (o) { return e.o[o.v]; }).join(e.joiner) + e.end : e.empty;
+    } else t = String(v).trim() ? e.full : e.empty;
+    return 'Article ' + q.no + ' (' + e.title + ') ' + t;
+  }
   function articleHead(q) { return '第' + q.no + '条（' + q.title + '）'; }
 
-  function answers() { return { me: S.v.me.trim(), partner: CFG.partner, date: CFG.date }; }
+  function answers() { return { me: meName(), partner: CFG.partner, date: CFG.date }; }
   function buildDoc(a) {
     var pre = preText(a.me, false);
-    var c = [['第1条（目的）', PURPOSE]];
-    QUESTIONS.forEach(function (q) { if (q.kind !== 'text') c.push([articleHead(q), clauseBody(q)]); });
-    var all = FIXED + CFG.title + CFG.sub + CFG.wmText + CFG.wmSub + CFG.footer + pre + CLOSING + jp(a.date) + '恋人' +
+    var c = [['第1条（目的）', PURPOSE, 'Article 1 (Purpose) ' + EN.purpose]];
+    QUESTIONS.forEach(function (q) { if (q.kind !== 'text') c.push([articleHead(q), clauseBody(q), clauseEn(q)]); });
+    var all = FIXED + EN.sub + CFG.title + CFG.sub + CFG.wmText + CFG.wmSub + CFG.footer + pre + CLOSING + jp(a.date) + '恋人' +
       c.map(function (x) { return x[0] + x[1]; }).join('').replace(/[【】]/g, '') + a.me + a.partner;
     return { pre: pre, clauses: c, closing: CLOSING, no: 'LV-' + (a.date ? a.date.replace(/-/g, '') + '-' : '') + RAND, all: all };
   }
@@ -441,16 +569,17 @@ body[data-mode="final"] .preview{display:block}
     if (cur) lines.push(cur);
     return lines.length ? lines : [''];
   }
-  function parseRuns(para) {
+  function parseRuns(para, en) {
     var out = [], on = false;
     Array.from(para).forEach(function (c) {
       if (c === '【') on = true;
       else if (c === '】') on = false;
-      else out.push({ c: c, h: on });
+      else out.push({ c: c, h: on, e: !!en });
     });
     return out;
   }
-  function cwid(ctx, ch) { ctx.font = ch.h ? f(700, HS) : f(400, FS); return ctx.measureText(ch.c).width; }
+  var ENFS = 15, ENLH = 24;
+  function cwid(ctx, ch) { ctx.font = ch.e ? f(ch.h ? 700 : 400, ENFS) : (ch.h ? f(700, HS) : f(400, FS)); return ctx.measureText(ch.c).width; }
   function wrapRuns(ctx, chars, w1, w2) {
     var lines = [], cur = [], w = 0, limit = w1;
     chars.forEach(function (ch) {
@@ -468,11 +597,35 @@ body[data-mode="final"] .preview{display:block}
     if (cur.length) lines.push(cur);
     return lines.length ? lines : [[]];
   }
+  function wrapEn(ctx, chars, w) {
+    var toks = [], cur = [];
+    chars.forEach(function (ch) {
+      var cjk = /[^\x00-\x7f]/.test(ch.c);
+      if (cjk) { if (cur.length) toks.push(cur); toks.push([ch]); cur = []; return; }
+      cur.push(ch);
+      if (ch.c === ' ') { toks.push(cur); cur = []; }
+    });
+    if (cur.length) toks.push(cur);
+    function tw(t) { return t.reduce(function (s, x) { return s + cwid(ctx, x); }, 0); }
+    var lines = [], line = [], lw = 0;
+    toks.forEach(function (t) {
+      var w2 = tw(t);
+      if (lw + w2 > w && line.length) {
+        while (line.length && line[line.length - 1].c === ' ') line.pop();
+        lines.push(line); line = []; lw = 0;
+        if (t.length === 1 && t[0].c === ' ') return;
+      }
+      if (w2 > w) { wrapRuns(ctx, t, w - lw, w).forEach(function (l, i, a) { if (i < a.length - 1) { lines.push(line.concat(l)); line = []; lw = 0; } else { line = line.concat(l); lw = tw(line); } }); return; }
+      line = line.concat(t); lw += w2;
+    });
+    if (line.length) lines.push(line);
+    return lines;
+  }
   function toRuns(line) {
     var runs = [];
     line.forEach(function (ch) {
       var l = runs[runs.length - 1];
-      if (l && l.h === ch.h) l.s += ch.c; else runs.push({ s: ch.c, h: ch.h });
+      if (l && l.h === ch.h) l.s += ch.c; else runs.push({ s: ch.c, h: ch.h, e: ch.e });
     });
     return runs;
   }
@@ -485,9 +638,19 @@ body[data-mode="final"] .preview{display:block}
     var pages = [[]], y = MT;
     function push(op) { pages[pages.length - 1].push(op); }
     function need(h) { if (y + h > PH - MB) { pages.push([]); y = MT; } }
+    function enLines(t) {
+      y += 2;
+      t.split('\n').forEach(function (para) {
+        wrapEn(ctx, parseRuns(para, true), TW).forEach(function (ln) {
+          need(ENLH);
+          push({ k: 'runs', runs: toRuns(ln), x: MX, y: y + ENLH / 2 });
+          y += ENLH;
+        });
+      });
+    }
 
     push({ k: 'title', s: CFG.title, y: MT + 30 });
-    push({ k: 't', s: CFG.sub, x: PW / 2, y: MT + 80, font: f(400, 22), color: SUB, align: 'center' });
+    push({ k: 't', s: CFG.sub + (withEn ? '　' + EN.sub : ''), x: PW / 2, y: MT + 80, font: f(400, 22), color: SUB, align: 'center' });
     push({ k: 'rule', y: MT + 110 });
     y = MT + 150;
 
@@ -497,6 +660,7 @@ body[data-mode="final"] .preview{display:block}
       push({ k: 't', s: ln, x: MX + (i === 0 ? FS : 0), y: y + LH / 2, font: f(400, FS) });
       y += LH;
     });
+    if (withEn) enLines(EN.pre(a.me ? hl(a.me) : ""));
     y += PG;
 
     d.clauses.forEach(function (cl) {
@@ -522,6 +686,7 @@ body[data-mode="final"] .preview{display:block}
         });
         first = false;
       });
+      if (withEn && cl[2]) enLines(cl[2]);
       y += CG;
     });
 
@@ -532,6 +697,7 @@ body[data-mode="final"] .preview{display:block}
       push({ k: 't', s: ln, x: MX + (i === 0 ? FS : 0), y: y + LH / 2, font: f(400, FS) });
       y += LH;
     });
+    if (withEn) enLines(EN.closing);
 
     y += 22;
     need(LH + 24 + 96 * 2);
@@ -546,10 +712,11 @@ body[data-mode="final"] .preview{display:block}
       y += 96;
     }
     row('甲', a.me, sealOf(a.me));
-    row('乙', a.partner, '恋人');
+    row('乙', a.partner + (withEn ? ' (' + EN.partner + ')' : ''), '恋人');
 
     pages.forEach(function (ops, i) {
       ops.push({ k: 't', s: CFG.footer, x: MX, y: PH - 62, font: f(400, 16), color: SUB });
+      if (withEn) ops.push({ k: 't', s: EN.footer, x: MX, y: PH - 40, font: f(400, 14), color: SUB });
       ops.push({ k: 't', s: (pages.length > 1 ? (i + 1) + ' / ' + pages.length + '　' : '') + '契約番号 ' + d.no, x: PW - MX, y: PH - 62, font: f(400, 16), color: SUB, align: 'right' });
       if (CFG.watermark) ops.push({ k: 'wm' });
     });
@@ -605,17 +772,18 @@ body[data-mode="final"] .preview{display:block}
         var rx = op.x;
         ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
         op.runs.forEach(function (r) {
-          ctx.font = r.h ? f(700, HS) : f(400, FS);
+          var hs = r.e ? ENFS : HS;
+          ctx.font = r.e ? f(r.h ? 700 : 400, ENFS) : (r.h ? f(700, HS) : f(400, FS));
           var rw = ctx.measureText(r.s).width;
-          if (r.h) {
+          if (r.h && !r.e) {
             ctx.fillStyle = MARK;
-            ctx.fillRect(rx - 1, op.y - Math.round(HS * 0.58), rw + 2, Math.round(HS * 1.2));
+            ctx.fillRect(rx - 1, op.y - Math.round(hs * 0.58), rw + 2, Math.round(hs * 1.2));
           }
-          ctx.fillStyle = r.h ? HL : INK;
+          ctx.fillStyle = r.h ? HL : (r.e ? SUB : INK);
           ctx.fillText(r.s, rx, op.y);
           if (r.h) {
-            ctx.strokeStyle = DEEP; ctx.lineWidth = 2;
-            ctx.beginPath(); ctx.moveTo(rx, op.y + Math.round(HS * 0.62)); ctx.lineTo(rx + rw, op.y + Math.round(HS * 0.62)); ctx.stroke();
+            ctx.strokeStyle = DEEP; ctx.lineWidth = r.e ? 1 : 2;
+            ctx.beginPath(); ctx.moveTo(rx, op.y + Math.round(hs * 0.62)); ctx.lineTo(rx + rw, op.y + Math.round(hs * 0.62)); ctx.stroke();
           }
           rx += rw;
         });
@@ -656,6 +824,7 @@ body[data-mode="final"] .preview{display:block}
     var pages, tctx = document.createElement('canvas').getContext('2d');
     for (var k = 0, sc = [1, 0.95, 0.9, 0.86, 0.82, 0.78, 0.74, 0.7]; k < sc.length; k++) {
       FS = Math.round(22 * sc[k]); LH = Math.round(38 * sc[k]); HS = FS + 2; PG = Math.round(40 * sc[k]); CG = Math.round(26 * sc[k]);
+      ENFS = Math.max(13, Math.round(17 * sc[k])); ENLH = Math.round(ENFS * 1.45);
       pages = layout(tctx, a, d);
       if (pages.length === 1) break;
     }
@@ -669,7 +838,7 @@ body[data-mode="final"] .preview{display:block}
       canvases[i].setAttribute('aria-label', '契約書 ' + (i + 1) + 'ページ目');
       drawPage(canvases[i], ops);
     });
-    $('pv-pages').textContent = 'A4・' + pages.length + 'ページ・サンプル';
+    $('pv-pages').textContent = T('A4・' + pages.length + 'ページ・サンプル', 'A4 · ' + pages.length + (pages.length > 1 ? ' pages' : ' page') + ' · Sample');
   }
   function schedule() { clearTimeout(timer); timer = setTimeout(function () { render(); }, 140); }
 
@@ -680,45 +849,53 @@ body[data-mode="final"] .preview{display:block}
 
   function cardInner(q) {
     var art, body;
-    if (q.kind === 'text') { art = '前文'; body = preText(S.v.me.trim(), true); }
+    if (LANG === 'en') {
+      if (q.kind === 'text') { art = 'Preamble'; body = EN.pre(hl(meName())); }
+      else if (!EN.q[q.id]) { art = articleHead(q); body = clauseBody(q); }
+      else { art = 'Article ' + q.no + ' (' + EN.q[q.id].title + ')'; body = clauseEn(q).replace(/^Article \d+ \([^)]*\) /, ''); }
+    } else if (q.kind === 'text') { art = '前文'; body = preText(meName(), true); }
     else { art = articleHead(q); body = clauseBody(q); }
-    return '<p class="clause-k">この答えだと、契約書にはこう載ります</p><p class="clause-t"><span class="art">' + esc(art) + '</span>' + toHtml(body) + '</p>';
+    return '<p class="clause-k">' + T('この答えだと、契約書にはこう載ります', 'With this answer, the agreement will say') + '</p><p class="clause-t"><span class="art">' + esc(art) + '</span>' + toHtml(body) + '</p>';
   }
   function clauseCard(q) { return '<div class="clause" id="clause">' + cardInner(q) + '</div>'; }
 
   function questionHtml(q) {
-    var h = '<div class="q-tags">' + (q.required ? '<span class="tag req">必須</span>' : '') + (q.kind === 'multi' ? '<span class="tag">複数選択OK</span>' : '') + (q.kind === 'free' ? '<span class="tag">任意</span>' : '') + '</div>';
+    var h = '<div class="q-tags">' + (q.required ? '<span class="tag req">' + T('必須', 'Required') + '</span>' : '') + (q.kind === 'multi' ? '<span class="tag">' + T('複数選択OK', 'Choose any') + '</span>' : '') + (q.kind === 'free' || q.kind === 'text' ? '<span class="tag">' + T('任意', 'Optional') + '</span>' : '') + '</div>';
     if (h === '<div class="q-tags"></div>') h = '';
-    h += '<h2 class="q-label" id="ql" tabindex="-1">' + esc(q.label) + '</h2>';
+    h += '<h2 class="q-label" id="ql" tabindex="-1">' + esc(qt(q, 'label')) + '</h2>';
+    var qe = (LANG === 'en' && QEN[q.id]) || {};
     var i;
     if (q.kind === 'text') {
-      h += '<input class="field" id="f-text" data-role="text" data-q="' + q.id + '" type="text" maxlength="' + q.max + '" placeholder="' + esc(q.ph) + '" aria-labelledby="ql" value="' + esc(S.v[q.id]) + '">';
+      h += '<input class="field" id="f-text" data-role="text" data-q="' + q.id + '" type="text" maxlength="' + q.max + '" placeholder="' + esc(qt(q, 'ph')) + '" aria-labelledby="ql" value="' + esc(S.v[q.id]) + '">' +
+        '<p class="free-note">' + T('ペンネームに書き換え可能です。<br>※画像にそのまま載りますので、公開しても困らないお名前にしてください。', 'You can change it to a pen name.<br>* Shown as is on the image, so please use a name you are OK sharing.') + '</p>';
     } else if (q.kind === 'free') {
-      h += '<textarea class="field" id="f-free" data-role="free" data-q="' + q.id + '" maxlength="' + q.max + '" placeholder="' + esc(q.ph) + '" aria-labelledby="ql">' + esc(S.v[q.id]) + '</textarea>' +
-        '<p class="count-txt"><span id="cnt">' + Array.from(S.v[q.id]).length + '</span> / ' + q.max + '</p>';
+      h += '<textarea class="field" id="f-free" data-role="free" data-q="' + q.id + '" maxlength="' + q.max + '" placeholder="' + esc(qt(q, 'ph')) + '" aria-labelledby="ql">' + esc(S.v[q.id]) + '</textarea>' +
+        '<p class="count-txt"><span id="cnt">' + Array.from(S.v[q.id]).length + '</span> / ' + q.max + '</p>' +
+        '<p class="free-note">' + T('※画像にそのまま載りますので、公開しても困らない内容にしてください。', '* Shown as is on the image, without translation. Please write in Japanese if you can (a translation tool is fine).') + '</p>';
     } else if (q.kind === 'single') {
       h += '<div class="opts" role="radiogroup" aria-labelledby="ql">';
       for (i = 0; i < q.options.length; i++) {
         var o = q.options[i];
-        h += '<label class="opt"><input type="radio" name="o" data-role="opt" data-q="' + q.id + '" value="' + o.v + '"' + (S.v[q.id] === o.v ? ' checked' : '') + '><span>' + esc(o.l) + '</span></label>';
+        h += '<label class="opt"><input type="radio" name="o" data-role="opt" data-q="' + q.id + '" value="' + o.v + '"' + (S.v[q.id] === o.v ? ' checked' : '') + '><span>' + esc(ot(q, o)) + '</span></label>';
       }
       h += '</div>';
       if (q.extra && q.extra.check) {
-        h += '<div class="opts sp"><label class="opt multi"><input type="checkbox" data-role="chk" data-q="' + q.id + '"' + (S.chk[q.id] ? ' checked' : '') + '><span>' + esc(q.extra.check.l) + '</span></label></div>';
+        h += '<div class="opts sp"><label class="opt multi"><input type="checkbox" data-role="chk" data-q="' + q.id + '"' + (S.chk[q.id] ? ' checked' : '') + '><span>' + esc(qe.check || q.extra.check.l) + '</span></label></div>';
       }
       if (q.extra && q.extra.note) {
-        h += '<input class="field sp" id="f-note" data-role="note" data-q="' + q.id + '" type="text" maxlength="' + q.extra.note.max + '" aria-label="ただし書き（任意）" placeholder="' + esc(q.extra.note.ph) + '" value="' + esc(S.note[q.id] || '') + '">';
+        h += '<input class="field sp" id="f-note" data-role="note" data-q="' + q.id + '" type="text" maxlength="' + q.extra.note.max + '" aria-label="' + T('ただし書き（任意）', 'Condition (optional)') + '" placeholder="' + esc(qe.note || q.extra.note.ph) + '" value="' + esc(S.note[q.id] || '') + '">';
       }
       if (q.exc) {
-        h += '<details class="exc"' + (S.x[q.id] ? ' open' : '') + '><summary>＋ 例外を足す（15文字まで）</summary><div class="exc-body">' +
-          '<input class="field" id="f-x" data-role="x" data-q="' + q.id + '" type="text" maxlength="15" aria-label="例外（15文字まで）" placeholder="' + esc(q.exc.ph) + '" value="' + esc(S.x[q.id] || '') + '">' +
-          '<div class="exc-ex">' + q.exc.ex.map(function (e) { return '<button type="button" class="chip-btn" data-fill="' + esc(e) + '">' + esc(e) + '</button>'; }).join('') + '</div></div></details>';
+        var xe = qe.exc || q.exc;
+        h += '<details class="exc"' + (S.x[q.id] ? ' open' : '') + '><summary>' + T('＋ 例外を足す（15文字まで）', '+ Add an exception (up to 15 characters)') + '</summary><div class="exc-body">' +
+          '<input class="field" id="f-x" data-role="x" data-q="' + q.id + '" type="text" maxlength="15" aria-label="' + T('例外（15文字まで）', 'Exception (up to 15 characters)') + '" placeholder="' + esc(xe.ph) + '" value="' + esc(S.x[q.id] || '') + '">' +
+          '<div class="exc-ex">' + xe.ex.map(function (e) { return '<button type="button" class="chip-btn" data-fill="' + esc(e) + '">' + esc(e) + '</button>'; }).join('') + '</div></div></details>';
       }
     } else if (q.kind === 'multi') {
       h += '<div class="opts" role="group" aria-labelledby="ql">';
       for (i = 0; i < q.options.length; i++) {
         var m = q.options[i];
-        h += '<label class="opt multi"><input type="checkbox" name="m" data-role="multi" data-q="' + q.id + '" value="' + m.v + '"' + (S.v[q.id].indexOf(m.v) >= 0 ? ' checked' : '') + '><span>' + esc(m.l) + '</span></label>';
+        h += '<label class="opt multi"><input type="checkbox" name="m" data-role="multi" data-q="' + q.id + '" value="' + m.v + '"' + (S.v[q.id].indexOf(m.v) >= 0 ? ' checked' : '') + '><span>' + esc(ot(q, m)) + '</span></label>';
       }
       h += '</div>';
     }
@@ -727,14 +904,18 @@ body[data-mode="final"] .preview{display:block}
 
   function coverHtml() {
     var sample = QUESTIONS.filter(function (q) { return q.kind === 'single'; })[0];
-    return '<div class="cover"><p class="eyebrow">独占契約書フォーム、作ってみた<span class="badge">非公式</span></p>' +
-      '<h1>独占契約書メーカー</h1>' +
-      '<p class="lead">' + N + '個の質問に答えると、二人の独占契約書（画像とPDF）ができます。所要時間は1〜2分です。</p>' +
-      '<p class="alt"><a href="index.html">まとめて答える版はこちら →</a></p>' +
-      (sample ? '<p class="sample-k">答えるたびに、条文がこのように決まります</p>' + clauseCard(sample) : '') +
-      '<p class="fine">個人が作った、非公式のフォームです。法的な効力もありません。回答は保存も送信もしません。ページを閉じると消えます。</p></div>';
+    return '<div class="cover"><div class="lang" role="group" aria-label="言語 / Language">' +
+      '<button type="button" class="lang-btn" data-lang="ja" aria-pressed="' + (LANG === 'ja') + '">日本語</button>' +
+      '<button type="button" class="lang-btn" data-lang="en" aria-pressed="' + (LANG === 'en') + '">English</button></div>' +
+      '<p class="eyebrow">' + T('独占契約書フォーム、作ってみた', 'An exclusive agreement form') + '<span class="badge">' + T('非公式', 'Unofficial') + '</span></p>' +
+      '<h1>' + T('独占契約書メーカー', 'Exclusive Agreement Maker') + '</h1>' +
+      '<p class="lead">' + T(N + '個の質問に答えると、二人の独占契約書（画像とPDF）ができます。所要時間は1〜2分です。', 'Answer ' + N + ' questions to make an exclusive agreement for the two of you (image and PDF). It takes 1 to 2 minutes. The agreement is written in Japanese with an English translation.') + '</p>' +
+      (LANG === 'ja' ? '<p class="alt"><a href="index.html">まとめて答える版はこちら →</a></p>' : '') +
+      (sample ? '<p class="sample-k">' + T('答えるたびに、条文がこのように決まります', 'Each answer sets an article like this') + '</p>' + clauseCard(sample) : '') +
+      '<p class="fine">' + T('個人が作った、非公式のフォームです。法的な効力もありません。回答は保存も送信もしません。ページを閉じると消えます。', 'An unofficial form made by an individual. Not legally binding. Your answers are not saved or sent anywhere, and disappear when you close the page.') + '</p></div>';
   }
-  var STAMP = '<button type="button" class="stamp go" id="stamp" aria-label="契約成立の判子（押すと、もう一度押す演出が流れます）">' +
+  function stampHtml() { return '<button type="button" class="stamp go" id="stamp" aria-label="' + T('契約成立の判子（押すと、もう一度押す演出が流れます）', 'Agreement stamp (tap to stamp again)') + '">' + STAMP; }
+  var STAMP = '' +
     '<svg viewBox="0 0 120 120" role="img" aria-hidden="true"><defs><filter id="rough" x="-5%" y="-5%" width="110%" height="110%">' +
     '<feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="4" result="n"/>' +
     '<feDisplacementMap in="SourceGraphic" in2="n" scale="2.4"/></filter></defs>' +
@@ -742,15 +923,15 @@ body[data-mode="final"] .preview{display:block}
     '<rect class="s" x="15" y="15" width="90" height="90" rx="5" stroke-width="1.6"/>' +
     '<text x="39" y="56">契</text><text x="81" y="56">約</text><text x="39" y="98">成</text><text x="81" y="98">立</text></g></svg></button>';
   function finalHtml() {
-    return '<div class="done go" id="done"><div class="stamp-stage">' + STAMP +
+    return '<div class="done go" id="done"><div class="stamp-stage">' + stampHtml() +
       /* マスコットを出す場所。使えるイラストが用意できたら、ここに入れる（今は空） */
       '<div class="mascot" id="mascot" hidden></div>' +
-      '<div class="stamp-text"><h2>契約書ができました</h2><p class="lead">保存して、Xに投稿してみましょう。</p><p class="stamp-hint">（判子をタップすると、押し直せます）</p></div></div></div>';
+      '<div class="stamp-text"><h2>' + T('契約書ができました', 'Your agreement is ready') + '</h2><p class="lead">' + T('保存して、Xに投稿してみましょう。', 'Save it and share it on X.') + '</p><p class="stamp-hint">' + T('（判子をタップすると、押し直せます）', '(Tap the stamp to press it again)') + '</p></div></div></div>';
   }
 
   function updateNav() {
     var q = QUESTIONS[S.step], dis = false, msg = '';
-    if (q && q.required && !String(S.v[q.id]).trim()) { dis = true; msg = q.reqMsg || ''; }
+    if (q && q.required && !String(S.v[q.id]).trim()) { dis = true; msg = qt(q, 'reqMsg') || ''; }
     nextBtn.disabled = dis;
     navmsg.textContent = msg;
   }
@@ -769,10 +950,10 @@ body[data-mode="final"] .preview{display:block}
     else if (s >= N) screen.innerHTML = finalHtml();
     else screen.innerHTML = questionHtml(QUESTIONS[s]);
     var pct = s < 0 ? 0 : Math.round(Math.min(s + 1, N) / N * 100);
-    $('count').textContent = s >= N ? '完成' : (s + 1) + ' / ' + N;
+    $('count').textContent = s >= N ? T('完成', 'Done') : (s + 1) + ' / ' + N;
     $('progfill').style.width = (s >= N ? 100 : pct) + '%';
     $('prog').setAttribute('aria-valuenow', String(s >= N ? 100 : pct));
-    nextBtn.textContent = s < 0 ? 'はじめる' : (s === N - 1 ? '契約書を完成させる' : '次へ');
+    nextBtn.textContent = s < 0 ? T('はじめる', 'Start') : (s === N - 1 ? T('契約書を完成させる', 'Finish the agreement') : T('次へ', 'Next'));
     updateNav();
     if (s >= N) { status = ''; updateActions(); }
     if (wantPreview()) schedule();
@@ -796,7 +977,7 @@ body[data-mode="final"] .preview{display:block}
     var t = e.target, r = t.getAttribute && t.getAttribute('data-role');
     if (!r) return;
     var id = t.getAttribute('data-q');
-    if (r === 'text' || r === 'free') S.v[id] = t.value;
+    if (r === 'text' || r === 'free') { S.v[id] = t.value; if (r === 'text') S.meAuto = false; }
     else if (r === 'x') S.x[id] = t.value;
     else if (r === 'note') S.note[id] = t.value;
     else return;
@@ -842,30 +1023,33 @@ body[data-mode="final"] .preview{display:block}
   var busy = false, status = '';
   var J = window.jspdf && window.jspdf.jsPDF;
   function updateActions() {
-    var ok = !!S.v.me.trim();
+    var ok = true;
     btnPng.disabled = !(ok && !busy);
     btnPdf.disabled = !(ok && J && !busy);
     btnShow.disabled = !(ok && !busy);
-    msgEl.textContent = status || (J ? '' : 'PDF保存の部品を読み込めませんでした。PNG画像で保存してください。');
+    msgEl.textContent = status || (J ? '' : T('PDF保存の部品を読み込めませんでした。PNG画像で保存してください。', 'Could not load the PDF tool. Please save as PNG.'));
   }
   function say(s) { status = s; updateActions(); }
 
-  QUESTIONS.forEach(function (q, i) {
-    var b = document.createElement('button');
-    b.type = 'button'; b.className = 'chip-btn';
-    b.textContent = 'Q' + (i + 1) + ' ' + q.short;
-    b.addEventListener('click', function () { go(i); });
-    $('jumps').appendChild(b);
-  });
+  function buildJumps() {
+    $('jumps').textContent = '';
+    QUESTIONS.forEach(function (q, i) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'chip-btn';
+      b.textContent = 'Q' + (i + 1) + ' ' + qt(q, 'short');
+      b.addEventListener('click', function () { go(i); });
+      $('jumps').appendChild(b);
+    });
+  }
   var armed = false, rbtn = $('restart');
   rbtn.addEventListener('click', function () {
-    if (!armed) { armed = true; rbtn.textContent = '回答がすべて消えます。もう一度押すとやり直します'; return; }
-    armed = false; rbtn.textContent = '最初からやり直す';
-    S = freshState(); go(-1);
+    if (!armed) { armed = true; rbtn.textContent = T('回答がすべて消えます。もう一度押すとやり直します', 'All answers will be cleared. Tap again to start over'); return; }
+    armed = false; rbtn.textContent = T('最初からやり直す', 'Start over');
+    S = freshState(); withEn = LANG === 'en'; $('en-toggle').checked = withEn; go(-1);
   });
 
   function fileBase() {
-    var s = S.v.me.trim().replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 10);
+    var s = meName().replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 10);
     return '恋人独占契約書_' + (s || 'me');
   }
   function toBlob(c) { return new Promise(function (res) { c.toBlob(res, 'image/png'); }); }
@@ -886,8 +1070,8 @@ body[data-mode="final"] .preview{display:block}
         var blob = await toBlob(cs[i]);
         saveBlob(blob, cs.length > 1 ? base + '_' + (i + 1) + 'of' + cs.length + '.png' : base + '.png');
       }
-      busy = false; say('PNG画像を保存しました。保存できていないときは、下の「画像を表示」を使ってください。');
-    } catch (e) { busy = false; say('保存できませんでした。「画像を表示」から長押しで保存してください。'); }
+      busy = false; say(T('PNG画像を保存しました。保存できていないときは、下の「画像を表示」を使ってください。', 'Saved the PNG image. If it did not save, use "Show the image" below.'));
+    } catch (e) { busy = false; say(T('保存できませんでした。「画像を表示」から長押しで保存してください。', 'Could not save. Use "Show the image" and press and hold to save.')); }
   }
   async function savePdf() {
     if (!J || busy) return;
@@ -901,15 +1085,15 @@ body[data-mode="final"] .preview{display:block}
         pdf.addImage(c.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
       });
       saveBlob(pdf.output('blob'), fileBase() + '.pdf');
-      busy = false; say('PDFを保存しました。');
-    } catch (e) { busy = false; say('PDFを保存できませんでした。PNG画像で保存してください。'); }
+      busy = false; say(T('PDFを保存しました。', 'Saved the PDF.'));
+    } catch (e) { busy = false; say(T('PDFを保存できませんでした。PNG画像で保存してください。', 'Could not save the PDF. Please save as PNG.')); }
   }
   async function copyImage(c) {
     try {
       var blob = await toBlob(c);
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-      say('画像をコピーしました。Xの投稿画面に貼り付けできます。');
-    } catch (e) { say('コピーできませんでした。画像を長押し（右クリック）して保存してください。'); }
+      say(T('画像をコピーしました。Xの投稿画面に貼り付けできます。', 'Copied the image. You can paste it into your post on X.'));
+    } catch (e) { say(T('コピーできませんでした。画像を長押し（右クリック）して保存してください。', 'Could not copy. Press and hold (or right-click) the image to save it.')); }
   }
   async function showSaveBox() {
     if (busy) return;
@@ -924,7 +1108,7 @@ body[data-mode="final"] .preview{display:block}
         img.src = c.toDataURL('image/png');
         var b = document.createElement('button');
         b.type = 'button'; b.className = 'btn sub';
-        b.textContent = cs.length > 1 ? (i + 1) + 'ページ目の画像をコピー' : '画像をコピー';
+        b.textContent = cs.length > 1 ? T((i + 1) + 'ページ目の画像をコピー', 'Copy page ' + (i + 1)) : T('画像をコピー', 'Copy image');
         b.addEventListener('click', function () { copyImage(c); });
         item.appendChild(img); item.appendChild(b); list.appendChild(item);
       });
@@ -933,11 +1117,39 @@ body[data-mode="final"] .preview{display:block}
       box.scrollIntoView({ block: 'start' });
     } finally { busy = false; updateActions(); }
   }
+  $('en-toggle').addEventListener('change', function (e) { withEn = e.target.checked; status = ''; updateActions(); schedule(); });
   btnPng.addEventListener('click', savePng);
   btnPdf.addEventListener('click', savePdf);
   btnShow.addEventListener('click', showSaveBox);
   $('btn-closebox').addEventListener('click', function () { $('savebox').hidden = true; });
-  btnX.href = 'https://x.com/intent/post?text=' + encodeURIComponent(('独占契約書ができました！ ' + CFG.hashtag).trim());
+  var STATIC = [
+    ['back', '← 戻る', '← Back'], ['btn-png', 'PNG画像で保存', 'Save as PNG'], ['btn-pdf', 'PDFで保存', 'Save as PDF'],
+    ['btn-x', 'Xに投稿する', 'Post on X'], ['btn-show', '保存できないとき：画像を表示（長押しで保存）', 'Can\'t save? Show the image (press and hold to save)'],
+    ['hint-x', 'Xの投稿画面が開いたら、保存した画像を添付してください。', 'When the X post screen opens, attach the image you saved.'],
+    ['savebox-msg', '画像を長押し（パソコンは右クリック）して「画像を保存」を選んでください。コピーして、そのままXの投稿画面に貼り付けることもできます。', 'Press and hold the image (right-click on a computer) and choose "Save Image". You can also copy it and paste it into your post on X.'],
+    ['btn-closebox', '閉じる', 'Close'], ['jumps-k', '答えを直したい質問を選ぶ', 'Pick a question to change'],
+    ['fine-end', '個人が作った、非公式のフォームです。法的な効力もありません。', 'An unofficial form made by an individual. Not legally binding.'],
+    ['pv-title', 'できあがりプレビュー', 'Preview'], ['pv-wait', '契約書を準備しています…', 'Preparing the agreement…']
+  ];
+  function applyLang() {
+    document.documentElement.lang = LANG;
+    STATIC.forEach(function (x) { var el = $(x[0]); if (el) el.textContent = T(x[1], x[2]); });
+    if (!armed) rbtn.textContent = T('最初からやり直す', 'Start over');
+    $('prog').setAttribute('aria-label', T('進み具合', 'Progress'));
+    btnX.href = 'https://x.com/intent/post?text=' + encodeURIComponent((T('独占契約書ができました！ ', 'I made my exclusive agreement! ') + CFG.hashtag).trim());
+    buildJumps();
+  }
+  function setLang(l) {
+    LANG = l; withEn = l === 'en'; $('en-toggle').checked = withEn;
+    if (S.meAuto) S.v.me = defName();
+    applyLang(); renderStep();
+  }
+  screen.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('.lang-btn') : null;
+    if (b) setLang(b.getAttribute('data-lang'));
+  });
+  withEn = LANG === 'en'; $('en-toggle').checked = withEn;
+  applyLang();
 
 
   renderStep();
